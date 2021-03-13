@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebGL 2D CAD</title>
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body onload="load()">
+        <h2 class="center">WebGL 2D CAD</h2>
+        <p class="center"><i>Choose your object type and draw it on canvas above</i></p>
+        <section class="center">
+            <button id="helpBtn">Help</button>
+            <input type="button" id="btn_line" value="Line" onclick="setLine()">
+            <input type="button" id="btn_square" value="Square" onclick="setSquare()">
+            <input type="button" id="btn_polygon" value="Polygon" onclick="setPolygon()">
+            <input type="number" id="n-poly" min="1" onchange="changeNPoly()">
+            <input type="color" id="color_picker" onchange="getColor()">
+        </section>
+        <br />
+        <section class="center">
+            <canvas id="canvas-surface" width="500" height="500">
+            Your browser does not support HTML5
+            </canvas>
+        </section>
+        <section class="center">
+            <input type="text" id="export_file" placeholder="Enter file name">
+            <input type="button" value="Export" onclick="exportFile()">
+            <input type="file" id="import_file" accept=".json">
+            <input type="button" value="Import" onclick="importFile()">
+        </section>
+        <div id="help" class="help">
+            
+            <!-- Modal content -->
+            <div class="help-content">
+                <span class="close">&times;</span>
+                <h2>Menggambar Garis</h2>
+                <p> 1. Klik tombol Line <br/>
+                    2. Pilih dua koordinat pada canvas
+                </p>
+
+                <h2>Mengubah Panjang Garis</h2>
+                <p>1. Klik salah satu titik garis pada canvas <br />
+                   2. Drag dan drop titik yang telah dipilih untuk mengubah panjang garis
+                </p>
+                
+                <h2>Menggambar Persegi</h2>
+                <p>
+                    1. Klik tombol Square<br/>
+                    2. Pilih satu koordinat pada canvas sebagai titik pusat
+                </p>
+
+                <h2>Mengubah Panjang Sisi Persegi</h2>
+                <p> 1. Klik salah satu titik persegi pada canvas <br />
+                    2. Drag dan drop titik yang telah dipilih untuk mengubah panjang sisi persegi
+                </p>
+                
+                <h2>Menggambar Polygon</h2>
+                <p>
+                    1. Klik tombol polygon<br/>
+                    2. Atur jumlah sisi yang ingin dibuat sebanyak n <br/>
+                    3. Pilih n buah koordinat pada canvas
+                </p>
+
+                <h2>Mengubah Bentuk Polygon</h2>
+                <p> 1. Klik salah satu titik polygon pada canvas <br />
+                    2. Drag dan drop titik yang telah dipilih untuk mengubah bentuk polygon
+                </p>
+                
+                <h2>Mengganti Warna Objek</h2>
+                <p>
+                    1. Pilih satu titik dari objek yang akan diganti warnanya<br/>
+                    2. Ubah pengaturan warna pada input warna
+                </p>
+
+                <h2>Menyimpan Gambar</h2>
+                <p>
+                    1. Input nama file pada field di sebelah kiri tombol export<br/>
+                    2. Klik tombol export
+                </p>
+
+                <h2>Memuat Gambar</h2>
+                <p>
+                    1. Unggah file yang ingin ditampilkan pada canvas<br/>
+                    2. Klik tombol import
+                </p>
+            </div>
+            
+        </div>
+        <script src="app.js"></script>
+        <script src="polygon.js"></script>
+        <script src="line.js"></script>
+        <script src="square.js"></script>
+    </body>
+</html>
