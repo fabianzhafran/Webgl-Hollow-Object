@@ -6,6 +6,19 @@
     background-color: rgba(191.25, 216.75, 204, 1.0);
 }
 
+.flex_row {
+	display: flex;
+	justify-content: center;
+	/* height: 20px; */
+}
+
+.pl-10 {
+	padding-left: 10px;
+}
+
+.pl-5 {
+	padding-left: 5px;
+}
 
 .help {
 	display: none; 

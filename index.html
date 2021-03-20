@@ -1,25 +1,119 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebGL 2D CAD</title>
+        <title>WebGL 3D Hollow Object</title>
         <link rel="stylesheet" href="index.css">
     </head>
     <body onload="load()">
-        <h2 class="center">WebGL 2D CAD</h2>
-        <p class="center"><i>Choose your object type and draw it on canvas above</i></p>
+        <h2 class="center">WebGL 3D Hollow Object</h2>
+        <div class="center"><i>
+            Choose your object type below <br/>
+            Click on the canvas to start and stop the animation
+        </i></div>
+        <br/>
         <section class="center">
             <button id="helpBtn">Help</button>
-            <input type="button" id="btn_line" value="Line" onclick="setLine()">
-            <input type="button" id="btn_square" value="Square" onclick="setSquare()">
-            <input type="button" id="btn_polygon" value="Polygon" onclick="setPolygon()">
-            <input type="number" id="n-poly" min="1" onchange="changeNPoly()">
+            <input type="button" id="btn_torus" value="Torus" onclick="drawTorus()">
             <input type="color" id="color_picker" onchange="getColor()">
         </section>
-        <br />
+        <br/>
         <section class="center">
-            <canvas id="canvas-surface" width="500" height="500">
+            <canvas id="canvas-surface" width="500" height="500" onclick="running = !running">
             Your browser does not support HTML5
             </canvas>
+        </section>
+        <section>
+            <p>
+                <div class="flex_row">
+                    <div>OX:</div>
+                    <div>
+                        <select id='ox'>
+                            <option>-1.0<option>-0.7<option>-0.3
+                            <option selected="selected">0
+                            <option>+0.3<option>+0.7<option>+1.0
+                        </select>
+                    </div>
+                    <div class="pl-10">OY:</div>
+                    <div>
+                        <select id='oy'>
+                            <option>-1.0<option>-0.7<option>-0.3
+                            <option selected="selected">0
+                            <option>+0.3<option>+0.7<option>+1.0
+                        </select>
+                    </div>
+                    <div class="pl-10">OZ:</div>
+                    <div>
+                        <select id='oz'>
+                            <option>-1.0<option>-0.7<option>-0.3
+                            <option selected="selected">0
+                            <option>+0.3<option>+0.7<option>+1.0
+                        </select>
+                    </div>
+                </div>
+                <!-- <br/> -->
+                <div class="flex_row">
+                    <div>RX:</div>
+                    <div class="pl-5" id='ax'>0</div>
+                    <div class="pl-5">
+                        <select id='dx'>
+                            <option>-2<option>-1<option>0<option selected="selected">+1<option>+2
+                        </select>
+                    </div>
+                    <div class="pl-10">RY:</div>
+                    <div class="pl-5" id='ay'>0</div>
+                    <div class="pl-5">
+                        <select id='dy'>
+                            <option>-2<option>-1<option>0<option>+1<option selected="selected">+2
+                        </select>
+                    </div>
+                    <div class="pl-10">RZ:</div>
+                    <div class="pl-5" id='az'>0</div>
+                    <div class="pl-5">
+                        <select id='dz'>
+                            <option>-2<option>-1<option selected="selected">0<option>+1<option>+2
+                        </select>
+                    </div>
+                </div>
+                <!-- <br/> -->
+                <div class="flex_row">
+                    <div>Scaling:</div>
+                    <div class="pl-5">
+                        <select id='s'>
+                            <option>1.5<option>1.0
+                            <option selected="selected">0.7
+                            <option>0.5<option>0.3
+                        </select>
+                    </div>
+                    <div class="pl-10">Distance to camera:</div>
+                    <div class="pl-5">
+                        <select id='d'>
+                            <option>0.5<option selected="selected">1.1<option>2.0
+                            <option>5.0<option>100.0<option>-1.5
+                        </select>
+                    </div>
+                </div>
+                <div class="flex_row">
+                    <div>Near:</div>
+                    <div class="pl-5">
+                        <select id='n'>
+                            <option>0.5<option>0.0
+                            <option>-0.5<option selected="selected">-1.0
+                            <option>-2.0
+                        </select>
+                    </div>
+                    <div class="pl-10">Far:</div>
+                    <div class="pl-5">
+                        <select id='f'>
+                            <option>0.5
+                            <option selected="selected">1.0
+                            <option>2.5
+                        </select>
+                    </div>
+                    <div class="pl-10">
+                        <input type='checkbox' id='exz'>Exchange XZ</input>
+                    </div>
+                </div>
+            </p>
         </section>
         <section class="center">
             <input type="text" id="export_file" placeholder="Enter file name">
@@ -86,8 +180,6 @@
             
         </div>
         <script src="app.js"></script>
-        <script src="polygon.js"></script>
-        <script src="line.js"></script>
-        <script src="square.js"></script>
+        <script src="torus.js"></script>
     </body>
 </html>

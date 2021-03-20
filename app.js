@@ -1,22 +1,48 @@
 var vertexShaderText = 
-    `precision mediump float;
-
-    attribute vec2 vertPosition;
-    attribute vec3 vertColor;
-    varying vec3 fragColor;
-
-    void main() {
-        fragColor = vertColor;
-        gl_Position = vec4(vertPosition, 0.0, 1.0);
+    `attribute vec3 ppos;
+    uniform mat4 mvp;
+    void main(void) {
+        gl_Position = mvp * vec4(ppos.x, ppos.y, ppos.z, 1.0);
+        gl_PointSize = 2.0;
     }`
 
 var fragmentShaderText = 
-    `precision mediump float;
-    
-    varying vec3 fragColor;
-    void main() {
-        gl_FragColor = vec4(fragColor, 1.0);
+    `void main(void) {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     }`
+
+var canvas = document.getElementById('canvas-surface')
+var gl = canvas.getContext('webgl')
+var program
+var aspectRatio
+var vertices
+var running = true
+
+var load = function() {
+    if (!gl) {
+        console.log('webgl not supported')
+        gl = canvas.getContext('experimental-webgl');
+	}
+
+	if (!gl) {
+		alert('Your browser does not support WebGL');
+	}
+}
+
+var main = function (object) {
+    // Create Shaders
+    var fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderText)
+    var vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderText)
+
+    // Create program
+    createProgram(vertexShader, fragmentShader)
+
+    if (object == "torus")
+        setTorus()
+
+    // The function draw() will be called every 40 ms
+    setInterval("drawObject(gl.TRIANGLE_STRIP)", 40);  
+}
 
 var createShader = function(type, source) {
     var shader = gl.createShader(type)
@@ -35,7 +61,7 @@ var createShader = function(type, source) {
 }
 
 var createProgram = function(vertexShader, fragmentShader) {
-    var program = gl.createProgram()
+    program = gl.createProgram()
     gl.attachShader(program, vertexShader)
     gl.attachShader(program, fragmentShader)
     gl.linkProgram(program)
@@ -50,188 +76,87 @@ var createProgram = function(vertexShader, fragmentShader) {
         gl.deleteProgram(program)
         return
     }
-
-    return program
+    gl.useProgram(program)
 }
 
-var drawObject = function (program, vertices, method, n) {
-    var vertexBufferObject = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufferObject);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+var drawObject = function (method) {
+	var positionAttribLocation = gl.getAttribLocation(program, 'ppos');
+    // var colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
 
-	var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
-    var colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
+	gl.enableVertexAttribArray(positionAttribLocation)
+	// gl.enableVertexAttribArray(colorAttribLocation)
+
+    var vertexBufferObject = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufferObject)
+	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
     gl.vertexAttribPointer(
 		positionAttribLocation, // Attribute location
-		2, // Number of elements per attribute
-		gl.FLOAT, // Type of elements
-		gl.FALSE,
-		5 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
-		0 // Offset from the beginning of a single vertex to this attribute
-	);
-	gl.vertexAttribPointer(
-		colorAttribLocation, // Attribute location
 		3, // Number of elements per attribute
 		gl.FLOAT, // Type of elements
 		gl.FALSE,
-		5 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
-		2 * Float32Array.BYTES_PER_ELEMENT // Offset from the beginning of a single vertex to this attribute
-	);
+		0, // Size of an individual vertex
+		0 // Offset from the beginning of a single vertex to this attribute
+	)
+    // gl.vertexAttribPointer(
+	// 	colorAttribLocation, // Attribute location
+	// 	3, // Number of elements per attribute
+	// 	gl.FLOAT, // Type of elements
+	// 	gl.FALSE,
+	// 	5 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
+	// 	2 * Float32Array.BYTES_PER_ELEMENT // Offset from the beginning of a single vertex to this attribute
+	// )
+    
+    // Determination of the aspect ratio
+    aspectRatio = canvas.width / canvas.height
 
-	gl.enableVertexAttribArray(positionAttribLocation)
-	gl.enableVertexAttribArray(colorAttribLocation)
+    // Tests if canvas should be refreshed
+    if (!running || !gl)
+        return
+        
+    // Gets control value angles from HTML page via DOM
+    var ax = parseInt(document.getElementById('ax').innerHTML, 10)
+    var ay = parseInt(document.getElementById('ay').innerHTML, 10)
+    var az = parseInt(document.getElementById('az').innerHTML, 10)
+    
+    // Use increments via DOM to update angles (still in degrees)
+    ax = (ax + parseInt(document.getElementById('dx').value, 10) + 360) % 360
+    ay = (ay + parseInt(document.getElementById('dy').value, 10) + 360) % 360
+    az = (az + parseInt(document.getElementById('dz').value, 10) + 360) % 360
+    
+    // Update HTML page with new values
+    document.getElementById('ax').innerHTML = ax.toString()
+    document.getElementById('ay').innerHTML = ay.toString()
+    document.getElementById('az').innerHTML = az.toString()
+    
+    // Convert values to radians
+    ax *= 2*Math.PI/360
+    ay *= 2*Math.PI/360
+    az *= 2*Math.PI/360; 
+
+    // Gets ox, oy, oz, s, d from the HTML form
+    var ox = parseFloat(document.getElementById('ox').value)
+    var oy = parseFloat(document.getElementById('oy').value)
+    var oz = parseFloat(document.getElementById('oz').value)
+    var s = parseFloat(document.getElementById('s').value) //scaling
+    var d = parseFloat(document.getElementById('d').value) //distance to camera
+    var f = parseFloat(document.getElementById('f').value) //far
+    var n = parseFloat(document.getElementById('n').value) //near
+    var exz = document.getElementById('exz').checked;
+
+    // Gets reference on the "uniform" 4x4 matrix transforming coordinates
+    var amvp = gl.getUniformLocation(program, "mvp");
+
+    // Creates matrix using rotation angles
+    var mat = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz);
+    
+    // Sets the model-view-projections matrix in the shader
+    gl.uniformMatrix4fv(amvp, false, mat)
 
 	// Main render loop
-	gl.useProgram(program)
-    gl.drawArrays(method, 0, n)
+	// gl.useProgram(program)
+    gl.drawArrays(method, 0, vertices.length/3)
+    gl.flush()
 }
-
-var canvas = document.getElementById('canvas-surface')
-var gl = canvas.getContext('webgl')
-
-var load = function() {
-    if (!gl) {
-        console.log('webgl not supported')
-        gl = canvas.getContext('experimental-webgl');
-	}
-
-	if (!gl) {
-		alert('Your browser does not support WebGL');
-	}
-}
-
-var main = function (vertices, n, method) {
-    // console.log('This is working')
-
-    // Create Shaders
-    var vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderText)
-    var fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderText)
-
-    // Create program
-    var program = createProgram(vertexShader, fragmentShader)
-
-    drawObject(program, vertices, method, n)
-}
-
-var isPolygon = false
-var isLine = false
-var isSquare = false
-
-var x = 0
-var y = 0
-var width = document.getElementById('canvas-surface').width
-var height = document.getElementById('canvas-surface').height
-
-var selectedObject
-var idxPoint
-var isDrag = false
-
-canvas.addEventListener("mousedown", function(e) {
-    x = getXCursorPosition(canvas, e)
-    y = getYCursorPosition(canvas, e)   
-    // console.log('x : '+ x + ' y : ' + y)
-    checkSelectedObject(x, y)
-    render(x, y)
-
-    if (selectedObject != null) {
-        isDrag = true
-        canvas.addEventListener("mouseup", (event) => changeObjectPoint(canvas, event))
-
-        if(!isDrag) {
-            canvas.removeEventListener("mouseup", (event) => changeObjectPoint(canvas, event))
-        }
-    }
-})
-
-var render = function(x, y) {
-    if (isPolygon) {
-        drawPolygon(x, y)
-    } else if (isLine) {
-       drawLine(x, y)
-    } else if (isSquare) {
-        drawSquare(x, y)
-    }
-}
-
-var renderObject = function(vertices, n, method) {
-    main(vertices, n, method)
-    for (var i=0; i<vertices.length; i+=5) {
-        var sq_point = getSquarePoint(vertices[i], vertices[i+1])
-        main(sq_point, 4, gl.TRIANGLE_FAN)
-        points.push(sq_point)
-    }
-    // console.log("render object")
-    // console.log(points)
-}
-
-var renderAll = function() {
-    for (var i=0; i<arrObjects.length; i++) {
-        main(arrObjects[i].vert, arrObjects[i].n, arrObjects[i].meth)
-        // render square points of object
-        for (var j=0; j<arrObjects[i].n; j++) {
-            main(arrObjects[i].p[j], 4, gl.TRIANGLE_FAN)
-        }
-    }
-}
-
-var getXCursorPosition = function(canvas, event) {
-    const rect = canvas.getBoundingClientRect()
-    const x = event.clientX - rect.left
-    return (x - width/2)/ (width/2);
-}
-
-var getYCursorPosition  = function(canvas, event) {
-    const rect = canvas.getBoundingClientRect()
-    const y = event.clientY - rect.top
-    return (y - height/2)/ (height/2) * -1;
-}
-
-var checkSelectedObject = function(x, y) {
-    selectedObject = null
-    idxPoint = -1
-
-    arrObjects.forEach(function (item) {
-        item.p.forEach(function (item2, idx) {
-            // console.log("item2")
-            // console.log(item2)
-            if (x > item2[0] && y < item2[1] &&
-                x < item2[5] && y < item2[6] &&
-                x < item2[10] && y > item2[11] &&
-                x > item2[15] && y > item2[16]) {
-                selectedObject = item
-                idxPoint = idx
-                console.log("object selected with idx " + idx)
-                }
-        })
-    })
-    // console.log(selectedObject)
-}
-
-var changeObjectPoint = function(canvas, ev) {
-    // console.log("masuk sini ga nih")
-    x = getXCursorPosition(canvas, ev)
-    y = getYCursorPosition(canvas, ev)
-        
-    if (isDrag && selectedObject.type != "square") {
-        // change vertices point
-        selectedObject.vert[idxPoint*5] = x
-        selectedObject.vert[idxPoint*5 + 1] = y
-
-        // change square point
-        selectedObject.p[idxPoint] = getSquarePoint(x, y)
-        renderAll()
-        isDrag = false
-    } else if (isDrag && selectedObject.type == "square") {
-        scaleSquare(x, y)
-        renderAll()
-        isDrag = false
-    }
-}
-
-var vertices = []
-var rgb = [0.0, 0.0, 0.0]
-
-var arrObjects = []
 
 const hexToRgb = hex =>
   hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
