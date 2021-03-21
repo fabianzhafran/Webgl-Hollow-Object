@@ -14,11 +14,15 @@
         <section class="center">
             <button id="helpBtn">Help</button>
             <input type="button" id="btn_torus" value="Torus" onclick="drawTorus()">
+            <input type="button" id="btn_torus" value="Cube" onclick="drawCube()">
             <input type="color" id="color_picker" onchange="getColor()">
         </section>
         <br/>
         <section class="center">
             <canvas id="canvas-surface" width="500" height="500" onclick="running = !running">
+            Your browser does not support HTML5
+            </canvas>
+            <canvas id="canvas-surface2" width="500" height="500" onclick="running = !running">
             Your browser does not support HTML5
             </canvas>
         </section>
@@ -179,7 +183,12 @@
             </div>
             
         </div>
-        <script src="app.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+          integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+          crossorigin="anonymous" defer></script>
         <script src="torus.js"></script>
+        <script src="cube.js"></script>
+        <script src="app.js"></script>
+        <script src="app-cube.js"></script>
     </body>
 </html>

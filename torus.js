@@ -10,6 +10,7 @@ var setTorus = function() {
     var sradius = 0.3
 
     // Creates the object in "vertices"
+    objectType = "torus"
     vertices = makeTorus(0.7, sradius, numsegs, numssegs, interleave)
 }
 
@@ -103,5 +104,6 @@ var makeTorus = function(r, sr, n, sn, k) {
         }
 
     // Converts and returns array
+    // console.log(tv)
     return new Float32Array(tv)
 }

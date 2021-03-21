@@ -16,6 +16,7 @@ var gl = canvas.getContext('webgl')
 var program
 var aspectRatio
 var vertices
+var objectType
 var running = true
 
 var load = function() {
@@ -37,8 +38,11 @@ var main = function (object) {
     // Create program
     createProgram(vertexShader, fragmentShader)
 
-    if (object == "torus")
+    if (object == "torus") {
         setTorus()
+    } else if (object == "cube") {
+        setCube()
+    }
 
     // The function draw() will be called every 40 ms
     setInterval("drawObject(gl.TRIANGLE_STRIP)", 40);  
@@ -148,14 +152,41 @@ var drawObject = function (method) {
 
     // Creates matrix using rotation angles
     var mat = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz);
+    // console.log(mat.length)
+    // mat = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     
     // Sets the model-view-projections matrix in the shader
     gl.uniformMatrix4fv(amvp, false, mat)
 
 	// Main render loop
 	// gl.useProgram(program)
-    gl.drawArrays(method, 0, vertices.length/3)
-    gl.flush()
+    // console.log(objectType)
+    
+    let indexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+    let indices = generate_indices(vertices.length / 12)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices)
+
+    if (objectType === "torus") {
+        // console.log(vertices)
+        gl.drawArrays(method, 0, vertices.length/3)
+        gl.flush()
+    } else if (objectType === "cube") {
+        // console.log(vertices)
+        // let indexBuffer = gl.createBuffer()
+        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+        // let indices = generate_indices(vertices.length / 12)
+        // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+        // const vertexCount = 48 * 6
+        // const type = gl.UNSIGNED_SHORT
+        // const offset = 0
+        // gl.drawElements(gl.TRIANGLES, vertexCount, type, offset)
+        // gl.flush()
+        
+        gl.drawArrays(method, 0, vertices.length)
+        gl.flush()
+    }
 }
 
 const hexToRgb = hex =>
