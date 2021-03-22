@@ -17,7 +17,7 @@ var program
 var aspectRatio
 var vertices
 var objectType
-var running = true
+var running = false
 
 var load = function() {
     if (!gl) {

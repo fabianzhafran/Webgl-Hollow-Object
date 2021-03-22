@@ -1,5 +1,6 @@
 var drawTorus = function() {
     main("torus")
+    running = true
 }
 
 var setTorus = function() {
@@ -7,7 +8,7 @@ var setTorus = function() {
     var interleave = 1.0
     var numsegs = 40
     var numssegs = 40
-    var sradius = 0.3
+    var sradius = 0.2
 
     // Creates the object in "vertices"
     objectType = "torus"
