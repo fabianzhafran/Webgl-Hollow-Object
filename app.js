@@ -118,6 +118,9 @@ var drawObject = function (method) {
         return
         
     // Gets control value angles from HTML page via DOM
+    var projectionType = document.getElementById('projection').value
+    var projectionDegree = parseInt(document.getElementById('projection-degree').value)
+
     var ax = parseInt(document.getElementById('ax').innerHTML, 10)
     var ay = parseInt(document.getElementById('ay').innerHTML, 10)
     var az = parseInt(document.getElementById('az').innerHTML, 10)
@@ -151,7 +154,7 @@ var drawObject = function (method) {
     var amvp = gl.getUniformLocation(program, "mvp");
 
     // Creates matrix using rotation angles
-    var mat = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz);
+    var mat = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz, projectionType, projectionDegree);
     // console.log(mat.length)
     // mat = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     

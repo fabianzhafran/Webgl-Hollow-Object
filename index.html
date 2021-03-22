@@ -14,7 +14,7 @@
         <section class="center">
             <button id="helpBtn">Help</button>
             <input type="button" id="btn_torus" value="Torus" onclick="drawTorus()">
-            <input type="button" id="btn_torus" value="Cube" onclick="drawCube()">
+            <!-- <input type="button" id="btn_torus" value="Cube" onclick="drawCube()"> -->
             <input type="color" id="color_picker" onchange="getColor()">
         </section>
         <br/>
@@ -28,6 +28,23 @@
         </section>
         <section>
             <p>
+                
+                <div class="flex_row">
+                    <div>Projection Type:</div>
+                    <div>
+                        <select id='projection'>
+                            <option>perspective<option>orthographic<option>oblique
+                        </select>
+                    </div>
+                </div>
+                <div class="flex_row">
+                    <div>Projection Degree (for oblique):</div>
+                    <div>
+                        <select id='projection-degree'>
+                            <option>30<option>45<option>60
+                        </select>
+                    </div>
+                </div>
                 <div class="flex_row">
                     <div>OX:</div>
                     <div>

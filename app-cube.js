@@ -598,7 +598,7 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
 
   // Clear the canvas2 before we start drawing on it.
 
-  gl2.clear(gl2.COLOR_BUFFER_BIT | gl2.DEPTH_BUFFER_BIT);
+  gl2.clear(gl2.COLOR_BUFFER_BIT | gl2.DEPTH_BUFFER_BIT)
 
   // Create a perspective matrix, a special matrix that is
   // used to simulate the distortion of perspective in a camera.
@@ -608,10 +608,19 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
   // and 100 units away from the camera.
 
   const fieldOfView = 45 * Math.PI / 180;   // in radians
-  const aspect = gl2.canvas.clientWidth / gl2.canvas.clientHeight;
+  const aspect = gl2.canvas.clientWidth / gl2.canvas.clientHeight
   const zNear = 0.1;
   const zFar = 100.0;
-  const projectionMatrix = ComputeFOVProjection(fieldOfView, aspect, zNear, zFar, false)
+
+  var projectionType = document.getElementById('projection').value
+  var projectionDegree = parseInt(document.getElementById('projection-degree').value)
+
+  let projectionMatrix = null
+  if (projectionType === 'perspective') {
+	  projectionMatrix = ComputeFOVProjection(fieldOfView, aspect, zNear, zFar, false)
+  } else {
+	  projectionMatrix = [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]
+  }
 
 	// Gets control value angles from HTML page via DOM
 	var ax = parseInt(document.getElementById('ax').innerHTML, 10)
@@ -631,7 +640,7 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
 	// Convert values to radians
 	ax *= 2*Math.PI/360
 	ay *= 2*Math.PI/360
-	az *= 2*Math.PI/360;
+	az *= 2*Math.PI/360
 
 	// Gets ox, oy, oz, s, d from the HTML form
 	var ox = parseFloat(document.getElementById('ox').value)
@@ -642,7 +651,7 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
 	var f = parseFloat(document.getElementById('f').value) //far
 	var n = parseFloat(document.getElementById('n').value) //near
 	var exz = document.getElementById('exz').checked;
-  const modelViewMatrix = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz);
+  const modelViewMatrix = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz, projectionType, projectionDegree);
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute
