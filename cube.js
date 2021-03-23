@@ -1,5 +1,6 @@
 var drawCube = function() {
-    main("cube")
+    main("cube");
+    running = true;
 }
 
 var setCube = function() {
@@ -380,9 +381,7 @@ function generate_indices(k) {
         temp.push(i*4 + 2);
         temp.push(i*4 + 3);
     }
-    // for (let i = 0; i < k; i++) {
-    //     console.log(`${i*4}, ${i*4+1}, ${i*4+2},     ${i*4}, ${i*4+2}, ${i*4+3}`)
-    // }
+    
     return temp;
 }
 
