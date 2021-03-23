@@ -17,8 +17,6 @@ function main2() {
     attribute vec4 aVertexPosition;
     attribute vec4 aVertexColor;
     attribute vec3 aVertexNormal;
-    // attribute vec3 aVertexAmbient;
-    // attribute vec2 aTextureCoord;
     
     uniform mat4 uNormalMatrix;
     uniform mat4 uModelViewMatrix;
@@ -27,7 +25,6 @@ function main2() {
 
     varying highp vec4 vColor;
     varying highp vec3 vLighting;
-    // varying highp vec2 vTextureCoord;
     
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
@@ -48,14 +45,8 @@ function main2() {
   const fsSource = `
     varying highp vec4 vColor;
     varying highp vec3 vLighting;
-    // varying highp vec2 vTextureCoord;
-
-    // uniform sampler2D uSampler;
 
     void main(void) {
-      // highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
-      // gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
-      
       gl_FragColor = vColor;
       gl_FragColor.rgb *= vLighting;
     }
@@ -555,7 +546,6 @@ function initBuffers(gl2) {
 
   return {
     position: positionBuffer,
-    // ambient: ambientBuffer,
     color: colorBuffer,
     normal: normalBuffer,
     indices: indexBuffer,
@@ -563,67 +553,21 @@ function initBuffers(gl2) {
   };
 }
 
-
-function loadTexture(gl2, url) {
-  const texture = gl2.createTexture();
-  gl2.bindTexture(gl2.TEXTURE_2D, texture);
-
-  const level = 0;
-  const internalFormat = gl2.RGBA;
-  const width = 1;
-  const height = 1;
-  const border = 0;
-  const srcFormat = gl2.RGBA;
-  const srcType = gl2.UNSIGNED_BYTE;
-  const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
-  gl2.texImage2D(gl2.TEXTURE_2D, level, internalFormat,
-                width, height, border, srcFormat, srcType,
-                pixel);
-
-  const image = new Image();
-  image.onload = function() {
-    gl2.bindTexture(gl2.TEXTURE_2D, texture);
-    gl2.texImage2D(gl2.TEXTURE_2D, level, internalFormat,
-                  srcFormat, srcType, image);
-
-    // WebGL1 has different requirements for power of 2 images
-    // vs non power of 2 images so check if the image is a
-    // power of 2 in both dimensions.
-    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-       // Yes, it's a power of 2. Generate mips.
-       gl2.generateMipmap(gl2.TEXTURE_2D);
-    } else {
-       // No, it's not a power of 2. Turn of mips and set
-       // wrapping to clamp to edge
-       gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_S, gl2.CLAMP_TO_EDGE);
-       gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_T, gl2.CLAMP_TO_EDGE);
-       gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_MIN_FILTER, gl2.LINEAR);
-    }
-  };
-  image.src = url;
-
-  return texture;
-}
-
 function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
 }
 
-//
-// Draw the scene.
-//
-// function drawScene(gl2, programInfo, buffers, texture, deltaTime) {
 function drawScene(gl2, programInfo, buffers, deltaTime) {
 	let temp = [191.25, 216.75, 204]
 	gl2.clearColor(temp[0]/256, temp[1]/256, temp[2]/256, 1.0);
-  gl2.clearDepth(1.0);                 // Clear everything
-  gl2.enable(gl2.DEPTH_TEST);           // Enable depth testing
-  gl2.depthFunc(gl2.LEQUAL);            // Near things obscure far things
+  gl2.clearDepth(1.0);
+  gl2.enable(gl2.DEPTH_TEST);
+  gl2.depthFunc(gl2.LEQUAL);
 
 
   gl2.clear(gl2.COLOR_BUFFER_BIT | gl2.DEPTH_BUFFER_BIT);
 
-  const fieldOfView = 45 * Math.PI / 180;   // in radians
+  const fieldOfView = 45 * Math.PI / 180;
   const aspect = gl2.canvas.clientWidth / gl2.canvas.clientHeight;
   const zNear = 0.1;
   const zFar = 100.0;
@@ -638,49 +582,39 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
 	  projectionMatrix = [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]
   }
 
-  	// Tests if canvas should be refreshed
 	if (!running || !gl)
 	  	return
 
-	// Gets control value angles from HTML page via DOM
 	var ax = parseInt(document.getElementById('ax').innerHTML, 10)
 	var ay = parseInt(document.getElementById('ay').innerHTML, 10)
 	var az = parseInt(document.getElementById('az').innerHTML, 10)
 
-	// Use increments via DOM to update angles (still in degrees)
 	ax = (ax + parseInt(document.getElementById('dx').value, 10) + 360) % 360
 	ay = (ay + parseInt(document.getElementById('dy').value, 10) + 360) % 360
 	az = (az + parseInt(document.getElementById('dz').value, 10) + 360) % 360
 
-	// Update HTML page with new values
 	document.getElementById('ax').innerHTML = ax.toString()
 	document.getElementById('ay').innerHTML = ay.toString()
 	document.getElementById('az').innerHTML = az.toString()
 
-	// Convert values to radians
 	ax *= 2*Math.PI/360
 	ay *= 2*Math.PI/360
 	az *= 2*Math.PI/360
 
-	// Gets ox, oy, oz, s, d from the HTML form
 	var ox = parseFloat(document.getElementById('ox').value)
 	var oy = parseFloat(document.getElementById('oy').value)
 	var oz = parseFloat(document.getElementById('oz').value)
-	var s = parseFloat(document.getElementById('s').value) //scaling
-	var d = parseFloat(document.getElementById('d').value) //distance to camera
-	var f = parseFloat(document.getElementById('f').value) //far
-	var n = parseFloat(document.getElementById('n').value) //near
+	var s = parseFloat(document.getElementById('s').value)
+	var d = parseFloat(document.getElementById('d').value)
+	var f = parseFloat(document.getElementById('f').value)
+	var n = parseFloat(document.getElementById('n').value)
 	var exz = document.getElementById('exz').checked;
   let modelViewMatrix = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz, projectionType, projectionDegree);
 
   let modelViewtemp = list_to_matrix(modelViewMatrix, 4);
   let normalMatrix = [].concat(...matrix_transpose(matrix_invert(modelViewtemp)));
 
-//   let normalMatrix = mat4.create();
-//   mat4.invert(normalMatrix, modelViewMatrix);
-//   mat4.transpose(normalMatrix, normalMatrix);
-
-  { // position buffer
+  {
     const numComponents = 3;
     const type = gl2.FLOAT;
     const normalize = false;
