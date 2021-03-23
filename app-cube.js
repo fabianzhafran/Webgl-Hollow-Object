@@ -1,614 +1,630 @@
+
 var cubeRotation = 0.0;
 
 main2();
 
-//
-// Start here
-//
 function main2() {
   const canvas2 = document.querySelector('#canvas-surface2');
-  const gl2 = canvas2.getContext('webgl') || canvas2.getContext('experimental-webgl');
-
-  // If we don't have a GL context, give up now
+  const gl2 = canvas2.getContext('webgl') || canvas2.getContext('experimental-webgl');;
 
   if (!gl2) {
-	alert('Unable to initialize WebGL. Your browser or machine may not support it.');
-	return;
+    alert('Unable to initialize WebGL. Your browser or machine may not support it.');
+    return;
   }
 
   // Vertex shader program
-
   const vsSource = `
-	attribute vec4 aVertexPosition;
-	attribute vec4 aVertexColor;
-	uniform mat4 uModelViewMatrix;
-	uniform mat4 uProjectionMatrix;
-	varying lowp vec4 vColor;
-	void main(void) {
-	  gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-	  vColor = aVertexColor;
-	}
+    attribute vec4 aVertexPosition;
+    attribute vec4 aVertexColor;
+    attribute vec3 aVertexNormal;
+    // attribute vec3 aVertexAmbient;
+    // attribute vec2 aTextureCoord;
+    
+    uniform mat4 uNormalMatrix;
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+    uniform vec3 uAmbientLight;
+
+    varying highp vec4 vColor;
+    varying highp vec3 vLighting;
+    // varying highp vec2 vTextureCoord;
+    
+    void main(void) {
+      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+      vColor = aVertexColor;
+
+      highp vec3 ambientLight = uAmbientLight;
+      highp vec3 directionalLightColor = vec3(1, 1, 1);
+      highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+
+      highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+
+      highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+      vLighting = ambientLight + (directionalLightColor * directional);
+    }
   `;
 
   // Fragment shader program
-
   const fsSource = `
-	varying lowp vec4 vColor;
-	void main(void) {
-	  gl_FragColor = vColor;
-	}
+    varying highp vec4 vColor;
+    varying highp vec3 vLighting;
+    // varying highp vec2 vTextureCoord;
+
+    // uniform sampler2D uSampler;
+
+    void main(void) {
+      // highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
+      // gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+      
+      gl_FragColor = vColor;
+      gl_FragColor.rgb *= vLighting;
+    }
   `;
 
-  // Initialize a shader program; this is where all the lighting
-  // for the vertices and so forth is established.
   const shaderProgram = initShaderProgram(gl2, vsSource, fsSource);
 
-  // Collect all the info needed to use the shader program.
-  // Look up which attributes our shader program is using
-  // for aVertexPosition, aVevrtexColor and also
-  // look up uniform locations.
   const programInfo = {
-	program: shaderProgram,
-	attribLocations: {
-	  vertexPosition: gl2.getAttribLocation(shaderProgram, 'aVertexPosition'),
-	  vertexColor: gl2.getAttribLocation(shaderProgram, 'aVertexColor'),
-	},
-	uniformLocations: {
-	  projectionMatrix: gl2.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-	  modelViewMatrix: gl2.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-	}
+    program: shaderProgram,
+    attribLocations: {
+      vertexPosition: gl2.getAttribLocation(shaderProgram, 'aVertexPosition'),
+      vertexColor: gl2.getAttribLocation(shaderProgram, 'aVertexColor'),
+      vertexNormal: gl2.getAttribLocation(shaderProgram, 'aVertexNormal'),
+      // vertexAmbient: gl2.getAttribLocation(shaderProgram, 'aVertexAmbient'),
+    },
+    uniformLocations: {
+      projectionMatrix: gl2.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+      modelViewMatrix: gl2.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+      normalMatrix: gl2.getUniformLocation(shaderProgram, 'uNormalMatrix'),
+      ambientLight: gl2.getUniformLocation(shaderProgram, 'uAmbientLight')
+    }
   };
-
-  // Here's where we call the routine that builds all the
-  // objects we'll be drawing.
   const buffers = initBuffers(gl2);
 
   var then = 0;
-
-  // Draw the scene repeatedly
   function render(now) {
-	now *= 0.001;  // convert to seconds
-	const deltaTime = now - then;
-	then = now;
+    now *= 0.001;
+    const deltaTime = now - then;
+    then = now;
 
-	drawScene(gl2, programInfo, buffers, deltaTime);
+    drawScene(gl2, programInfo, buffers, deltaTime);
 
-	requestAnimationFrame(render);
+    requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
 }
 
-//
-// initBuffers
-//
-// Initialize the buffers we'll need. For this demo, we just
-// have one object -- a simple three-dimensional cube.
-//
 function initBuffers(gl2) {
-
-  // Create a buffer for the cube's vertex positions.
-
   const positionBuffer = gl2.createBuffer();
-
-  // Select the positionBuffer as the one to apply buffer
-  // operations to from here out.
 
   gl2.bindBuffer(gl2.ARRAY_BUFFER, positionBuffer);
 
-  // Now create an array of positions for the cube.
-
   const positions = [
-	// ~~~~~ FACE LUAR ~~~~~
-	// // Front face
-	// -1.0, -1.0,  1.0,
-	// 1.0, -1.0,  1.0,
-	// 1.0,  1.0,  1.0,
-	// -1.0,  1.0,  1.0,
+    // ~~~~~ FACE LUAR ~~~~~
+    // // Front face
+    // -1.0, -1.0,  1.0,
+    // 1.0, -1.0,  1.0,
+    // 1.0,  1.0,  1.0,
+    // -1.0,  1.0,  1.0,
 
-	// Front bottom face
-	-1.0, -1.0,  1.0,
-	 1.0, -1.0,  1.0,
-	 1.0, -0.8,  1.0,
-	-1.0, -0.8,  1.0,
+    // Front bottom face
+    -1.0, -1.0,  1.0,
+     1.0, -1.0,  1.0,
+     1.0, -0.8,  1.0,
+    -1.0, -0.8,  1.0,
+    
+    // Front right face
+     0.8, -1.0,  1.0,
+     1.0, -1.0,  1.0,
+     1.0,  1.0,  1.0,
+     0.8,  1.0,  1.0,
+    
+    // Front top face
+    -1.0,  0.8,  1.0,
+     1.0,  0.8,  1.0,
+     1.0,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    
+    // Front left face
+    -1.0, -1.0,  1.0,
+    -0.8, -1.0,  1.0,
+    -0.8,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
 
-	// Front right face
-	 0.8, -1.0,  1.0,
-	 1.0, -1.0,  1.0,
-	 1.0,  1.0,  1.0,
-	 0.8,  1.0,  1.0,
+    // // Back face
+    // -1.0, -1.0, -1.0,
+    // -1.0,  1.0, -1.0,
+    //  1.0,  1.0, -1.0,
+    //  1.0, -1.0, -1.0,
 
-	// Front top face
-	-1.0,  0.8,  1.0,
-	 1.0,  0.8,  1.0,
-	 1.0,  1.0,  1.0,
-	-1.0,  1.0,  1.0,
+    // Back bottom face 
+    -1.0, -1.0,  -1.0,
+     1.0, -1.0,  -1.0,
+     1.0, -0.8,  -1.0,
+    -1.0, -0.8,  -1.0,
+     
+    // Back right face 
+     0.8, -1.0,  -1.0,
+     1.0, -1.0,  -1.0,
+     1.0,  1.0,  -1.0,
+     0.8,  1.0,  -1.0,
+     
+    // Back top face 
+    -1.0,  0.8,  -1.0,
+     1.0,  0.8,  -1.0,
+     1.0,  1.0,  -1.0,
+    -1.0,  1.0,  -1.0,
+     
+    // Back left face 
+    -1.0, -1.0,  -1.0,
+    -0.8, -1.0,  -1.0,
+    -0.8,  1.0,  -1.0,
+    -1.0,  1.0,  -1.0,
 
-	// Front left face
-	-1.0, -1.0,  1.0,
-	-0.8, -1.0,  1.0,
-	-0.8,  1.0,  1.0,
-	-1.0,  1.0,  1.0,
+    // // Top face
+    // -1.0,  1.0,  -1.0,
+    // -1.0,  1.0,   1.0,
+    //  1.0,  1.0,   1.0,
+    //  1.0,  1.0,  -1.0,
 
-	// // Back face
-	// -1.0, -1.0, -1.0,
-	// -1.0,  1.0, -1.0,
-	//  1.0,  1.0, -1.0,
-	//  1.0, -1.0, -1.0,
+    // Top bottom face
+    -1.0,  1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0, -0.8,
+    -1.0,  1.0, -0.8,
 
-	// Back bottom face
-	-1.0, -1.0,  -1.0,
-	 1.0, -1.0,  -1.0,
-	 1.0, -0.8,  -1.0,
-	-1.0, -0.8,  -1.0,
+    // Top right face
+     0.8,  1.0,  -1.0,
+     1.0,  1.0,  -1.0,
+     1.0,  1.0,   1.0,
+     0.8,  1.0,   1.0,
 
-	// Back right face
-	 0.8, -1.0,  -1.0,
-	 1.0, -1.0,  -1.0,
-	 1.0,  1.0,  -1.0,
-	 0.8,  1.0,  -1.0,
+    // Top top face
+    -1.0,  1.0,   0.8,
+     1.0,  1.0,   0.8,
+     1.0,  1.0,   1.0,
+    -1.0,  1.0,   1.0,
 
-	// Back top face
-	-1.0,  0.8,  -1.0,
-	 1.0,  0.8,  -1.0,
-	 1.0,  1.0,  -1.0,
-	-1.0,  1.0,  -1.0,
+    // Top left face
+    -1.0,  1.0,  -1.0,
+    -0.8,  1.0,  -1.0,
+    -0.8,  1.0,   1.0,
+    -1.0,  1.0,   1.0,
 
-	// Back left face
-	-1.0, -1.0,  -1.0,
-	-0.8, -1.0,  -1.0,
-	-0.8,  1.0,  -1.0,
-	-1.0,  1.0,  -1.0,
+    // // Bottom face
+    // -1.0, -1.0, -1.0,
+    //  1.0, -1.0, -1.0,
+    //  1.0, -1.0,  1.0,
+    // -1.0, -1.0,  1.0,
 
-	// // Top face
-	// -1.0,  1.0,  -1.0,
-	// -1.0,  1.0,   1.0,
-	//  1.0,  1.0,   1.0,
-	//  1.0,  1.0,  -1.0,
+    // Bottom bottom face
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0, -1.0, -0.8,
+    -1.0, -1.0, -0.8,
 
-	// Top bottom face
-	-1.0,  1.0, -1.0,
-	 1.0,  1.0, -1.0,
-	 1.0,  1.0, -0.8,
-	-1.0,  1.0, -0.8,
+    // Bottom right face
+     0.8, -1.0,  -1.0,
+     1.0, -1.0,  -1.0,
+     1.0, -1.0,   1.0,
+     0.8, -1.0,   1.0,
 
-	// Top right face
-	 0.8,  1.0,  -1.0,
-	 1.0,  1.0,  -1.0,
-	 1.0,  1.0,   1.0,
-	 0.8,  1.0,   1.0,
+    // Bottom top face
+    -1.0, -1.0,   0.8,
+     1.0, -1.0,   0.8,
+     1.0, -1.0,   1.0,
+    -1.0, -1.0,   1.0,
 
-	// Top top face
-	-1.0,  1.0,   0.8,
-	 1.0,  1.0,   0.8,
-	 1.0,  1.0,   1.0,
-	-1.0,  1.0,   1.0,
+    // Bottom left face
+    -1.0, -1.0,  -1.0,
+    -0.8, -1.0,  -1.0,
+    -0.8, -1.0,   1.0,
+    -1.0, -1.0,   1.0,
 
-	// Top left face
-	-1.0,  1.0,  -1.0,
-	-0.8,  1.0,  -1.0,
-	-0.8,  1.0,   1.0,
-	-1.0,  1.0,   1.0,
+    // // Right face
+    //  1.0, -1.0, -1.0,
+    //  1.0,  1.0, -1.0,
+    //  1.0,  1.0,  1.0,
+    //  1.0, -1.0,  1.0,
 
-	// // Bottom face
-	// -1.0, -1.0, -1.0,
-	//  1.0, -1.0, -1.0,
-	//  1.0, -1.0,  1.0,
-	// -1.0, -1.0,  1.0,
+    // Right bottom face
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0, -0.8,
+     1.0, -1.0, -0.8,
 
-	// Bottom bottom face
-	-1.0, -1.0, -1.0,
-	 1.0, -1.0, -1.0,
-	 1.0, -1.0, -0.8,
-	-1.0, -1.0, -0.8,
+    // Right right face
+     1.0,  0.8, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0,  1.0,
+     1.0,  0.8,  1.0,
 
-	// Bottom right face
-	 0.8, -1.0,  -1.0,
-	 1.0, -1.0,  -1.0,
-	 1.0, -1.0,   1.0,
-	 0.8, -1.0,   1.0,
+    // Right top face
+     1.0, -1.0,  0.8,
+     1.0,  1.0,  0.8,
+     1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
 
-	// Bottom top face
-	-1.0, -1.0,   0.8,
-	 1.0, -1.0,   0.8,
-	 1.0, -1.0,   1.0,
-	-1.0, -1.0,   1.0,
+    // Right left face
+     1.0, -1.0, -1.0,
+     1.0, -0.8, -1.0,
+     1.0, -0.8,  1.0,
+     1.0, -1.0,  1.0,
 
-	// Bottom left face
-	-1.0, -1.0,  -1.0,
-	-0.8, -1.0,  -1.0,
-	-0.8, -1.0,   1.0,
-	-1.0, -1.0,   1.0,
+    // // Left face
+    // -1.0, -1.0, -1.0,
+    // -1.0, -1.0,  1.0,
+    // -1.0,  1.0,  1.0,
+    // -1.0,  1.0, -1.0,
 
-	// // Right face
-	//  1.0, -1.0, -1.0,
-	//  1.0,  1.0, -1.0,
-	//  1.0,  1.0,  1.0,
-	//  1.0, -1.0,  1.0,
-
-	// Right bottom face
-	 1.0, -1.0, -1.0,
-	 1.0,  1.0, -1.0,
-	 1.0,  1.0, -0.8,
-	 1.0, -1.0, -0.8,
-
-	// Right right face
-	 1.0,  0.8, -1.0,
-	 1.0,  1.0, -1.0,
-	 1.0,  1.0,  1.0,
-	 1.0,  0.8,  1.0,
-
-	// Right top face
-	 1.0, -1.0,  0.8,
-	 1.0,  1.0,  0.8,
-	 1.0,  1.0,  1.0,
-	 1.0, -1.0,  1.0,
-
-	// Right left face
-	 1.0, -1.0, -1.0,
-	 1.0, -0.8, -1.0,
-	 1.0, -0.8,  1.0,
-	 1.0, -1.0,  1.0,
-
-	// // Left face
-	// -1.0, -1.0, -1.0,
-	// -1.0, -1.0,  1.0,
-	// -1.0,  1.0,  1.0,
-	// -1.0,  1.0, -1.0,
-
-	// Left bottom face
-	-1.0, -1.0, -1.0,
-	-1.0,  1.0, -1.0,
-	-1.0,  1.0, -0.8,
-	-1.0, -1.0, -0.8,
-
-   // Left right face
-	-1.0,  0.8, -1.0,
-	-1.0,  1.0, -1.0,
-	-1.0,  1.0,  1.0,
-	-1.0,  0.8,  1.0,
-
-   // Left top face
-	-1.0, -1.0,  0.8,
-	-1.0,  1.0,  0.8,
-	-1.0,  1.0,  1.0,
-	-1.0, -1.0,  1.0,
-
-   // Left left face
-	-1.0, -1.0, -1.0,
-	-1.0, -0.8, -1.0,
-	-1.0, -0.8,  1.0,
-	-1.0, -1.0,  1.0,
-
-	// ~~~~~ FACE DALAM ~~~~~
-
-	// // Front face
-	// -1.0, -1.0,  1.0,
-	// 1.0, -1.0,  1.0,
-	// 1.0,  1.0,  1.0,
-	// -1.0,  1.0,  1.0,
-
-	// Front bottom face
-	-1.0, -1.0,  0.8,
-	 1.0, -1.0,  0.8,
-	 1.0, -0.8,  0.8,
-	-1.0, -0.8,  0.8,
-
-	// Front right face
-	 0.8, -1.0,  0.8,
-	 1.0, -1.0,  0.8,
-	 1.0,  1.0,  0.8,
-	 0.8,  1.0,  0.8,
-
-	// Front top face
-	-1.0,  0.8,  0.8,
-	 1.0,  0.8,  0.8,
-	 1.0,  1.0,  0.8,
-	-1.0,  1.0,  0.8,
-
-	// Front left face
-	-1.0, -1.0,  0.8,
-	-0.8, -1.0,  0.8,
-	-0.8,  1.0,  0.8,
-	-1.0,  1.0,  0.8,
-
-	// // Back face
-	// -1.0, -1.0, -1.0,
-	// -1.0,  1.0, -1.0,
-	//  1.0,  1.0, -1.0,
-	//  1.0, -1.0, -1.0,
-
-	// Back bottom face
-	-1.0, -1.0,  -0.8,
-	 1.0, -1.0,  -0.8,
-	 1.0, -0.8,  -0.8,
-	-1.0, -0.8,  -0.8,
-
-	// Back right face
-	 0.8, -1.0,  -0.8,
-	 1.0, -1.0,  -0.8,
-	 1.0,  1.0,  -0.8,
-	 0.8,  1.0,  -0.8,
-
-	// Back top face
-	-1.0,  0.8,  -0.8,
-	 1.0,  0.8,  -0.8,
-	 1.0,  1.0,  -0.8,
-	-1.0,  1.0,  -0.8,
-
-	// Back left face
-	-1.0, -1.0,  -0.8,
-	-0.8, -1.0,  -0.8,
-	-0.8,  1.0,  -0.8,
-	-1.0,  1.0,  -0.8,
-
-	// // Top face
-	// -1.0,  1.0,  -1.0,
-	// -1.0,  1.0,   1.0,
-	//  1.0,  1.0,   1.0,
-	//  1.0,  1.0,  -1.0,
-
-	// Top bottom face
-	-1.0,  0.8, -1.0,
-	 1.0,  0.8, -1.0,
-	 1.0,  0.8, -0.8,
-	-1.0,  0.8, -0.8,
-
-	// Top right face
-	 0.8,  0.8,  -1.0,
-	 1.0,  0.8,  -1.0,
-	 1.0,  0.8,   1.0,
-	 0.8,  0.8,   1.0,
-
-	// Top top face
-	-1.0,  0.8,   0.8,
-	 1.0,  0.8,   0.8,
-	 1.0,  0.8,   1.0,
-	-1.0,  0.8,   1.0,
-
-	// Top left face
-	-1.0,  0.8,  -1.0,
-	-0.8,  0.8,  -1.0,
-	-0.8,  0.8,   1.0,
-	-1.0,  0.8,   1.0,
-
-	// // Bottom face
-	// -1.0, -1.0, -1.0,
-	//  1.0, -1.0, -1.0,
-	//  1.0, -1.0,  1.0,
-	// -1.0, -1.0,  1.0,
-
-	// Bottom bottom face
-	-1.0, -0.8, -1.0,
-	 1.0, -0.8, -1.0,
-	 1.0, -0.8, -0.8,
-	-1.0, -0.8, -0.8,
-
-	// Bottom right face
-	 0.8, -0.8,  -1.0,
-	 1.0, -0.8,  -1.0,
-	 1.0, -0.8,   1.0,
-	 0.8, -0.8,   1.0,
-
-	// // Bottom top face
-	-1.0,  -0.8,   0.8,
-	 1.0,  -0.8,   0.8,
-	 1.0,  -0.8,   1.0,
-	-1.0,  -0.8,   1.0,
-
-	// Bottom left face
-	-1.0, -0.8,  -1.0,
-	-0.8, -0.8,  -1.0,
-	-0.8, -0.8,   1.0,
-	-1.0, -0.8,   1.0,
-
-	// // Right face
-	//  1.0, -1.0, -1.0,
-	//  1.0,  1.0, -1.0,
-	//  1.0,  1.0,  1.0,
-	//  1.0, -1.0,  1.0,
-
-	// Right bottom face
-	 0.8, -1.0, -1.0,
-	 0.8,  1.0, -1.0,
-	 0.8,  1.0, -0.8,
-	 0.8, -1.0, -0.8,
-
-	// Right right face
-	 0.8,  0.8, -1.0,
-	 0.8,  1.0, -1.0,
-	 0.8,  1.0,  1.0,
-	 0.8,  0.8,  1.0,
-
-	// Right top face
-	 0.8, -1.0,  0.8,
-	 0.8,  1.0,  0.8,
-	 0.8,  1.0,  1.0,
-	 0.8, -1.0,  1.0,
-
-	// Right left face
-	 0.8, -1.0, -1.0,
-	 0.8, -0.8, -1.0,
-	 0.8, -0.8,  1.0,
-	 0.8, -1.0,  1.0,
-
-	// // Left face
-	// -1.0, -1.0, -1.0,
-	// -1.0, -1.0,  1.0,
-	// -1.0,  1.0,  1.0,
-	// -1.0,  1.0, -1.0,
-
-	// Left bottom face
-	-0.8, -1.0, -1.0,
-	-0.8,  1.0, -1.0,
-	-0.8,  1.0, -0.8,
-	-0.8, -1.0, -0.8,
+    // Left bottom face
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0, -0.8,
+    -1.0, -1.0, -0.8,
 
    // Left right face
-	-0.8,  0.8, -1.0,
-	-0.8,  1.0, -1.0,
-	-0.8,  1.0,  1.0,
-	-0.8,  0.8,  1.0,
+    -1.0,  0.8, -1.0,
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+    -1.0,  0.8,  1.0,
 
    // Left top face
-	-0.8, -1.0,  0.8,
-	-0.8,  1.0,  0.8,
-	-0.8,  1.0,  1.0,
-	-0.8, -1.0,  1.0,
+    -1.0, -1.0,  0.8,
+    -1.0,  1.0,  0.8,
+    -1.0,  1.0,  1.0,
+    -1.0, -1.0,  1.0,
 
    // Left left face
-	-0.8, -1.0, -1.0,
-	-0.8, -0.8, -1.0,
-	-0.8, -0.8,  1.0,
-	-0.8, -1.0,  1.0,
-  ].map(e => e / 5);
+    -1.0, -1.0, -1.0,
+    -1.0, -0.8, -1.0,
+    -1.0, -0.8,  1.0,
+    -1.0, -1.0,  1.0,
 
-  // Now pass the list of positions into WebGL to build the
-  // shape. We do this by creating a Float32Array from the
-  // JavaScript array, then use it to fill the current buffer.
+    // ~~~~~ FACE DALAM ~~~~~
+    
+    // // Front face
+    // -1.0, -1.0,  1.0,
+    // 1.0, -1.0,  1.0,
+    // 1.0,  1.0,  1.0,
+    // -1.0,  1.0,  1.0,
+
+    // Front bottom face
+    -1.0, -1.0,  0.8,
+     1.0, -1.0,  0.8,
+     1.0, -0.8,  0.8,
+    -1.0, -0.8,  0.8,
+    
+    // Front right face
+     0.8, -1.0,  0.8,
+     1.0, -1.0,  0.8,
+     1.0,  1.0,  0.8,
+     0.8,  1.0,  0.8,
+    
+    // Front top face
+    -1.0,  0.8,  0.8,
+     1.0,  0.8,  0.8,
+     1.0,  1.0,  0.8,
+    -1.0,  1.0,  0.8,
+    
+    // Front left face
+    -1.0, -1.0,  0.8,
+    -0.8, -1.0,  0.8,
+    -0.8,  1.0,  0.8,
+    -1.0,  1.0,  0.8,
+
+    // // Back face
+    // -1.0, -1.0, -1.0,
+    // -1.0,  1.0, -1.0,
+    //  1.0,  1.0, -1.0,
+    //  1.0, -1.0, -1.0,
+
+    // Back bottom face 
+    -1.0, -1.0,  -0.8,
+     1.0, -1.0,  -0.8,
+     1.0, -0.8,  -0.8,
+    -1.0, -0.8,  -0.8,
+     
+    // Back right face 
+     0.8, -1.0,  -0.8,
+     1.0, -1.0,  -0.8,
+     1.0,  1.0,  -0.8,
+     0.8,  1.0,  -0.8,
+     
+    // Back top face 
+    -1.0,  0.8,  -0.8,
+     1.0,  0.8,  -0.8,
+     1.0,  1.0,  -0.8,
+    -1.0,  1.0,  -0.8,
+     
+    // Back left face 
+    -1.0, -1.0,  -0.8,
+    -0.8, -1.0,  -0.8,
+    -0.8,  1.0,  -0.8,
+    -1.0,  1.0,  -0.8,
+
+    // // Top face
+    // -1.0,  1.0,  -1.0,
+    // -1.0,  1.0,   1.0,
+    //  1.0,  1.0,   1.0,
+    //  1.0,  1.0,  -1.0,
+
+    // Top bottom face
+    -1.0,  0.8, -1.0,
+     1.0,  0.8, -1.0,
+     1.0,  0.8, -0.8,
+    -1.0,  0.8, -0.8,
+
+    // Top right face
+     0.8,  0.8,  -1.0,
+     1.0,  0.8,  -1.0,
+     1.0,  0.8,   1.0,
+     0.8,  0.8,   1.0,
+
+    // Top top face
+    -1.0,  0.8,   0.8,
+     1.0,  0.8,   0.8,
+     1.0,  0.8,   1.0,
+    -1.0,  0.8,   1.0,
+
+    // Top left face
+    -1.0,  0.8,  -1.0,
+    -0.8,  0.8,  -1.0,
+    -0.8,  0.8,   1.0,
+    -1.0,  0.8,   1.0,
+
+    // // Bottom face
+    // -1.0, -1.0, -1.0,
+    //  1.0, -1.0, -1.0,
+    //  1.0, -1.0,  1.0,
+    // -1.0, -1.0,  1.0,
+
+    // Bottom bottom face
+    -1.0, -0.8, -1.0,
+     1.0, -0.8, -1.0,
+     1.0, -0.8, -0.8,
+    -1.0, -0.8, -0.8,
+
+    // Bottom right face
+     0.8, -0.8,  -1.0,
+     1.0, -0.8,  -1.0,
+     1.0, -0.8,   1.0,
+     0.8, -0.8,   1.0,
+
+    // // Bottom top face
+    -1.0,  -0.8,   0.8,
+     1.0,  -0.8,   0.8,
+     1.0,  -0.8,   1.0,
+    -1.0,  -0.8,   1.0,
+
+    // Bottom left face
+    -1.0, -0.8,  -1.0,
+    -0.8, -0.8,  -1.0,
+    -0.8, -0.8,   1.0,
+    -1.0, -0.8,   1.0,
+
+    // // Right face
+    //  1.0, -1.0, -1.0,
+    //  1.0,  1.0, -1.0,
+    //  1.0,  1.0,  1.0,
+    //  1.0, -1.0,  1.0,
+
+    // Right bottom face
+     0.8, -1.0, -1.0,
+     0.8,  1.0, -1.0,
+     0.8,  1.0, -0.8,
+     0.8, -1.0, -0.8,
+
+    // Right right face
+     0.8,  0.8, -1.0,
+     0.8,  1.0, -1.0,
+     0.8,  1.0,  1.0,
+     0.8,  0.8,  1.0,
+
+    // Right top face
+     0.8, -1.0,  0.8,
+     0.8,  1.0,  0.8,
+     0.8,  1.0,  1.0,
+     0.8, -1.0,  1.0,
+
+    // Right left face
+     0.8, -1.0, -1.0,
+     0.8, -0.8, -1.0,
+     0.8, -0.8,  1.0,
+     0.8, -1.0,  1.0,
+
+    // // Left face
+    // -1.0, -1.0, -1.0,
+    // -1.0, -1.0,  1.0,
+    // -1.0,  1.0,  1.0,
+    // -1.0,  1.0, -1.0,
+
+    // Left bottom face
+    -0.8, -1.0, -1.0,
+    -0.8,  1.0, -1.0,
+    -0.8,  1.0, -0.8,
+    -0.8, -1.0, -0.8,
+
+   // Left right face
+    -0.8,  0.8, -1.0,
+    -0.8,  1.0, -1.0,
+    -0.8,  1.0,  1.0,
+    -0.8,  0.8,  1.0,
+
+   // Left top face
+    -0.8, -1.0,  0.8,
+    -0.8,  1.0,  0.8,
+    -0.8,  1.0,  1.0,
+    -0.8, -1.0,  1.0,
+
+   // Left left face
+    -0.8, -1.0, -1.0,
+    -0.8, -0.8, -1.0,
+    -0.8, -0.8,  1.0,
+    -0.8, -1.0,  1.0,
+  ];
 
   gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(positions), gl2.STATIC_DRAW);
 
-  // Now set up the colors for the faces. We'll use solid colors
-  // for each face.
+  const normalBuffer = gl2.createBuffer();
+  gl2.bindBuffer(gl2.ARRAY_BUFFER, normalBuffer);
+
+  const vertexNormals = compute_cube_normal(positions)
+
+  gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(vertexNormals),
+                gl2.STATIC_DRAW);
 
   const faceColors = [
-	// ~~~~ LAYER LUAR ~~~~
-	[1.0,  1.0,  1.0,  1.0],    // Front-bottom face: white
-	[1.0,  1.0,  1.0,  1.0],    // Front-right face: white
-	[1.0,  1.0,  1.0,  1.0],    // Front-top face: white
-	[1.0,  1.0,  1.0,  1.0],    // Front-left face: white
+    // ~~~~ LAYER LUAR ~~~~
+    [1.0,  1.0,  1.0,  1.0],    // Front-bottom face: white
+    [1.0,  1.0,  1.0,  1.0],    // Front-right face: white
+    [1.0,  1.0,  1.0,  1.0],    // Front-top face: white
+    [1.0,  1.0,  1.0,  1.0],    // Front-left face: white
 
-	[1.0,  0.0,  0.0,  1.0],    // Back-bottom face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-right face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-top face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-left face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-bottom face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-right face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-top face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-left face: red
 
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
 
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
 
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
 
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
 
-	// ~~~~ LAYER DALAM ~~~~
-	[1.0,  1.0,  1.0,  1.0],    // Front-bottom face: white
-	[1.0,  1.0,  1.0,  1.0],    // Front-right face: white
-	[1.0,  1.0,  1.0,  1.0],    // Front-top face: white
-	[1.0,  1.0,  1.0,  1.0],    // Front-left face: white
+    // ~~~~ LAYER DALAM ~~~~
+    [1.0,  1.0,  1.0,  1.0],    // Front-bottom face: white
+    [1.0,  1.0,  1.0,  1.0],    // Front-right face: white
+    [1.0,  1.0,  1.0,  1.0],    // Front-top face: white
+    [1.0,  1.0,  1.0,  1.0],    // Front-left face: white
 
-	[1.0,  0.0,  0.0,  1.0],    // Back-bottom face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-right face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-top face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-left face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-bottom face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-right face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-top face: red
+    [1.0,  0.0,  0.0,  1.0],    // Back-left face: red
 
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
 
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-	[0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
 
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
 
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
-	[1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
   ];
-
-  // Convert the array of colors into a table for all the vertices.
-
   var colors = [];
-
   for (var j = 0; j < faceColors.length; ++j) {
-	const c = faceColors[j];
-
-	// Repeat each color four times for the four vertices of the face
-	colors = colors.concat(c, c, c, c);
+    const c = faceColors[j];
+    colors = colors.concat(c, c, c, c);
   }
-
+  console.log(colors)
   const colorBuffer = gl2.createBuffer();
   gl2.bindBuffer(gl2.ARRAY_BUFFER, colorBuffer);
   gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(colors), gl2.STATIC_DRAW);
 
-  // Build the element array buffer; this specifies the indices
-  // into the vertex arrays for each face's vertices.
-
   const indexBuffer = gl2.createBuffer();
   gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-  // This array defines each face as two triangles, using the
-  // indices into the vertex array to specify each triangle's
-  // position.
-
-  const indices = generate_indices(positions.length / 12)
-  // console.log(indices)
-
-  // const indices = [
-  //   0,  1,  2,      0,  2,  3,    // back bottom
-  //   4,  5,  6,      4,  6,  7,    // back right
-  //   8,  9,  10,     8,  10, 11,   // back top
-  //   12, 13, 14,     12, 14, 15,   // back left
-  //   16, 17, 18,     16, 18, 19,   // top
-  //   20, 21, 22,     20, 22, 23,   // bottom
-  //   24, 25, 26,     24, 26, 27,   // right
-  //   28, 29, 30,     28, 30, 31,   // left
-  // ];
-
-  // Now send the element array to GL
+  const indices = generate_indices(positions.length / 12);
 
   gl2.bufferData(gl2.ELEMENT_ARRAY_BUFFER,
-	  new Uint16Array(indices), gl2.STATIC_DRAW);
+      new Uint16Array(indices), gl2.STATIC_DRAW);
 
   return {
-	position: positionBuffer,
-	color: colorBuffer,
-	indices: indexBuffer,
+    position: positionBuffer,
+    // ambient: ambientBuffer,
+    color: colorBuffer,
+    normal: normalBuffer,
+    indices: indexBuffer,
+    faceColors: faceColors
   };
+}
+
+
+function loadTexture(gl2, url) {
+  const texture = gl2.createTexture();
+  gl2.bindTexture(gl2.TEXTURE_2D, texture);
+
+  const level = 0;
+  const internalFormat = gl2.RGBA;
+  const width = 1;
+  const height = 1;
+  const border = 0;
+  const srcFormat = gl2.RGBA;
+  const srcType = gl2.UNSIGNED_BYTE;
+  const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
+  gl2.texImage2D(gl2.TEXTURE_2D, level, internalFormat,
+                width, height, border, srcFormat, srcType,
+                pixel);
+
+  const image = new Image();
+  image.onload = function() {
+    gl2.bindTexture(gl2.TEXTURE_2D, texture);
+    gl2.texImage2D(gl2.TEXTURE_2D, level, internalFormat,
+                  srcFormat, srcType, image);
+
+    // WebGL1 has different requirements for power of 2 images
+    // vs non power of 2 images so check if the image is a
+    // power of 2 in both dimensions.
+    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+       // Yes, it's a power of 2. Generate mips.
+       gl2.generateMipmap(gl2.TEXTURE_2D);
+    } else {
+       // No, it's not a power of 2. Turn of mips and set
+       // wrapping to clamp to edge
+       gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_S, gl2.CLAMP_TO_EDGE);
+       gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_T, gl2.CLAMP_TO_EDGE);
+       gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_MIN_FILTER, gl2.LINEAR);
+    }
+  };
+  image.src = url;
+
+  return texture;
+}
+
+function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
 }
 
 //
 // Draw the scene.
 //
+// function drawScene(gl2, programInfo, buffers, texture, deltaTime) {
 function drawScene(gl2, programInfo, buffers, deltaTime) {
-  let temp = [191.25, 216.75, 204]
-  gl2.clearColor(temp[0]/256, temp[1]/256, temp[2]/256, 1.0);  // Clear to black, fully opaque
+	let temp = [191.25, 216.75, 204]
+	gl2.clearColor(temp[0]/256, temp[1]/256, temp[2]/256, 1.0);
   gl2.clearDepth(1.0);                 // Clear everything
   gl2.enable(gl2.DEPTH_TEST);           // Enable depth testing
   gl2.depthFunc(gl2.LEQUAL);            // Near things obscure far things
 
-  // Clear the canvas2 before we start drawing on it.
 
-  gl2.clear(gl2.COLOR_BUFFER_BIT | gl2.DEPTH_BUFFER_BIT)
-
-  // Create a perspective matrix, a special matrix that is
-  // used to simulate the distortion of perspective in a camera.
-  // Our field of view is 45 degrees, with a width/height
-  // ratio that matches the display size of the canvas2
-  // and we only want to see objects between 0.1 units
-  // and 100 units away from the camera.
+  gl2.clear(gl2.COLOR_BUFFER_BIT | gl2.DEPTH_BUFFER_BIT);
 
   const fieldOfView = 45 * Math.PI / 180;   // in radians
-  const aspect = gl2.canvas.clientWidth / gl2.canvas.clientHeight
+  const aspect = gl2.canvas.clientWidth / gl2.canvas.clientHeight;
   const zNear = 0.1;
   const zFar = 100.0;
 
@@ -651,123 +667,129 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
 	var f = parseFloat(document.getElementById('f').value) //far
 	var n = parseFloat(document.getElementById('n').value) //near
 	var exz = document.getElementById('exz').checked;
-  const modelViewMatrix = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz, projectionType, projectionDegree);
+  let modelViewMatrix = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz, projectionType, projectionDegree);
 
-  // Tell WebGL how to pull out the positions from the position
-  // buffer into the vertexPosition attribute
-  {
-	const numComponents = 3;
-	const type = gl2.FLOAT;
-	const normalize = false;
-	const stride = 0;
-	const offset = 0;
-	gl2.bindBuffer(gl2.ARRAY_BUFFER, buffers.position);
-	gl2.vertexAttribPointer(
-		programInfo.attribLocations.vertexPosition,
-		numComponents,
-		type,
-		normalize,
-		stride,
-		offset);
-	gl2.enableVertexAttribArray(
-		programInfo.attribLocations.vertexPosition);
+  let modelViewtemp = list_to_matrix(modelViewMatrix, 4);
+  let normalMatrix = [].concat(...matrix_transpose(matrix_invert(modelViewtemp)));
+
+//   let normalMatrix = mat4.create();
+//   mat4.invert(normalMatrix, modelViewMatrix);
+//   mat4.transpose(normalMatrix, normalMatrix);
+
+  { // position buffer
+    const numComponents = 3;
+    const type = gl2.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl2.bindBuffer(gl2.ARRAY_BUFFER, buffers.position);
+    gl2.vertexAttribPointer(
+        programInfo.attribLocations.vertexPosition,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset);
+    gl2.enableVertexAttribArray(
+        programInfo.attribLocations.vertexPosition);
   }
 
-  // Tell WebGL how to pull out the colors from the color buffer
-  // into the vertexColor attribute.
-  {
-	const numComponents = 4;
-	const type = gl2.FLOAT;
-	const normalize = false;
-	const stride = 0;
-	const offset = 0;
-	gl2.bindBuffer(gl2.ARRAY_BUFFER, buffers.color);
-	gl2.vertexAttribPointer(
-		programInfo.attribLocations.vertexColor,
-		numComponents,
-		type,
-		normalize,
-		stride,
-		offset);
-	gl2.enableVertexAttribArray(
-		programInfo.attribLocations.vertexColor);
+  { // color buffer
+    const numComponents = 4;
+    const type = gl2.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl2.bindBuffer(gl2.ARRAY_BUFFER, buffers.color);
+    gl2.vertexAttribPointer(
+        programInfo.attribLocations.vertexColor,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset);
+    gl2.enableVertexAttribArray(
+        programInfo.attribLocations.vertexColor);
   }
 
-  // Tell WebGL which indices to use to index the vertices
+  { // normal buffer
+    const numComponents = 3;
+    const type = gl2.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl2.bindBuffer(gl2.ARRAY_BUFFER, buffers.normal);
+    gl2.vertexAttribPointer(
+        programInfo.attribLocations.vertexNormal,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset);
+    gl2.enableVertexAttribArray(
+        programInfo.attribLocations.vertexNormal);
+  }
+
   gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-  // Tell WebGL to use our program when drawing
 
   gl2.useProgram(programInfo.program);
 
-  // Set the shader uniforms
-
   gl2.uniformMatrix4fv(
-	  programInfo.uniformLocations.projectionMatrix,
-	  false,
-	  projectionMatrix);
+      programInfo.uniformLocations.projectionMatrix,
+      false,
+      projectionMatrix);
   gl2.uniformMatrix4fv(
-	  programInfo.uniformLocations.modelViewMatrix,
-	  false,
-	  modelViewMatrix);
+      programInfo.uniformLocations.modelViewMatrix,
+      false,
+      modelViewMatrix);
+  gl2.uniformMatrix4fv(
+      programInfo.uniformLocations.normalMatrix,
+      false,
+      normalMatrix);
+  let ambientOption = document.getElementById('ambient').value;
+  let ambientVector = null;
+  if (ambientOption === 'ON') {
+    // ambientVector = [0.2, 0.2, 0.2];
+    ambientVector = [0.3, 0.3, 0.3];
+  } else {
+    ambientVector = [1.0, 1.0, 1.0];
+  }
+  gl2.uniform3fv(programInfo.uniformLocations.ambientLight, ambientVector);
 
   {
-	const vertexCount = 48 * 6;
-	const type = gl2.UNSIGNED_SHORT;
-	const offset = 0;
-	gl2.drawElements(gl2.TRIANGLES, vertexCount, type, offset);
+    const vertexCount = 48 * 6;
+    const type = gl2.UNSIGNED_SHORT;
+    const offset = 0;
+    gl2.drawElements(gl2.TRIANGLES, vertexCount, type, offset);
   }
-
-  // Update the rotation for the next draw
-
   cubeRotation += deltaTime;
 }
 
-//
-// Initialize a shader program, so WebGL knows how to draw our data
-//
 function initShaderProgram(gl2, vsSource, fsSource) {
   const vertexShader = loadShader(gl2, gl2.VERTEX_SHADER, vsSource);
   const fragmentShader = loadShader(gl2, gl2.FRAGMENT_SHADER, fsSource);
-
-  // Create the shader program
 
   const shaderProgram = gl2.createProgram();
   gl2.attachShader(shaderProgram, vertexShader);
   gl2.attachShader(shaderProgram, fragmentShader);
   gl2.linkProgram(shaderProgram);
 
-  // If creating the shader program failed, alert
-
   if (!gl2.getProgramParameter(shaderProgram, gl2.LINK_STATUS)) {
-	alert('Unable to initialize the shader program: ' + gl2.getProgramInfoLog(shaderProgram));
-	return null;
+    alert('Unable to initialize the shader program: ' + gl2.getProgramInfoLog(shaderProgram));
+    return null;
   }
 
   return shaderProgram;
 }
 
-//
-// creates a shader of the given type, uploads the source and
-// compiles it.
-//
 function loadShader(gl2, type, source) {
   const shader = gl2.createShader(type);
-
-  // Send the source to the shader object
-
   gl2.shaderSource(shader, source);
-
-  // Compile the shader program
-
   gl2.compileShader(shader);
-
-  // See if it compiled successfully
-
   if (!gl2.getShaderParameter(shader, gl2.COMPILE_STATUS)) {
-	alert('An error occurred compiling the shaders: ' + gl2.getShaderInfoLog(shader));
-	gl2.deleteShader(shader);
-	return null;
+    alert('An error occurred compiling the shaders: ' + gl2.getShaderInfoLog(shader));
+    gl2.deleteShader(shader);
+    return null;
   }
 
   return shader;
