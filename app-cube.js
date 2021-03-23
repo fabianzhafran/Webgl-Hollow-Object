@@ -460,6 +460,8 @@ function initBuffers(gl2) {
   gl2.bindBuffer(gl2.ARRAY_BUFFER, normalBuffer);
 
   const vertexNormals = compute_cube_normal(positions)
+  // console.log(positions)
+  // console.log(vertexNormals)
 
   gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(vertexNormals),
                 gl2.STATIC_DRAW);

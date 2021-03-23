@@ -1,14 +1,33 @@
-var vertexShaderText = 
-    `attribute vec3 ppos;
+var vertexShaderText = `
+    attribute vec3 ppos;
+    attribute vec3 anormal;
+
     uniform mat4 mvp;
+    uniform vec3 ambient;
+    uniform mat4 normalMatrix;
+
+    varying highp vec3 lighting;
+
     void main(void) {
         gl_Position = mvp * vec4(ppos.x, ppos.y, ppos.z, 1.0);
+        
+        highp vec3 ambientLight = ambient;
+        highp vec3 directionalLightColor = vec3(1, 1, 1);
+        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+        highp vec4 transformedNormal = normalMatrix * vec4(anormal, 1.0);
+        
+        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+        lighting = ambient + (directionalLightColor * directional);
+
         gl_PointSize = 2.0;
     }`
 
-var fragmentShaderText = 
-    `void main(void) {
+var fragmentShaderText = `
+    varying highp vec3 lighting;
+
+    void main(void) {
         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor.rgb *= lighting;
     }`
 
 var canvas = document.getElementById('canvas-surface')
@@ -16,6 +35,7 @@ var gl = canvas.getContext('webgl')
 var program
 var aspectRatio
 var vertices
+var torusNormals
 var objectType
 var running = false
 
@@ -40,8 +60,6 @@ var main = function (object) {
 
     if (object == "torus") {
         setTorus()
-    } else if (object == "cube") {
-        setCube()
     }
 
     // The function draw() will be called every 40 ms
@@ -84,10 +102,12 @@ var createProgram = function(vertexShader, fragmentShader) {
 }
 
 var drawObject = function (method) {
-	var positionAttribLocation = gl.getAttribLocation(program, 'ppos');
+	var positionAttribLocation = gl.getAttribLocation(program, 'ppos')
+    var normalAttribLocation = gl.getAttribLocation(program, 'anormal')
     // var colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
 
 	gl.enableVertexAttribArray(positionAttribLocation)
+	gl.enableVertexAttribArray(normalAttribLocation)
 	// gl.enableVertexAttribArray(colorAttribLocation)
 
     var vertexBufferObject = gl.createBuffer()
@@ -101,14 +121,21 @@ var drawObject = function (method) {
 		0, // Size of an individual vertex
 		0 // Offset from the beginning of a single vertex to this attribute
 	)
-    // gl.vertexAttribPointer(
-	// 	colorAttribLocation, // Attribute location
-	// 	3, // Number of elements per attribute
-	// 	gl.FLOAT, // Type of elements
-	// 	gl.FALSE,
-	// 	5 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
-	// 	2 * Float32Array.BYTES_PER_ELEMENT // Offset from the beginning of a single vertex to this attribute
-	// )
+
+    // var torusNormals = compute_torus_normal(vertices)
+    var normalBuffer = gl.createBuffer()
+    console.log(torusNormals)
+    console.log(vertices)
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, torusNormals, gl.STATIC_DRAW)
+    gl.vertexAttribPointer(
+		normalAttribLocation, // Attribute location
+		3, // Number of elements per attribute
+		gl.FLOAT, // Type of elements
+		gl.FALSE,
+        0,
+        0
+	)
     
     // Determination of the aspect ratio
     aspectRatio = canvas.width / canvas.height
@@ -152,44 +179,37 @@ var drawObject = function (method) {
 
     // Gets reference on the "uniform" 4x4 matrix transforming coordinates
     var amvp = gl.getUniformLocation(program, "mvp");
+    var anormalMat = gl.getUniformLocation(program, "normalMatrix");
+    var aambient = gl.getUniformLocation(program, "ambient")
 
     // Creates matrix using rotation angles
     var mat = getTransformationMatrix(ox, oy, oz, ax, ay, az, s, d, f, n, aspectRatio, exz, projectionType, projectionDegree);
-    // console.log(mat.length)
+    var normalMat = [].concat(...matrix_transpose(matrix_invert(list_to_matrix(mat, 4))))
+
+    var ambientVector = null
+    var ambientOption = document.getElementById('ambient').value
+    if (ambientOption === 'ON') {
+        // ambientVector = [0.2, 0.2, 0.2];
+        ambientVector = [0.3, 0.3, 0.3]
+    } else {
+        ambientVector = [1.0, 1.0, 1.0]
+    }
+
+    // console.log(vertices)
+    // console.log(torusNormals)
     // mat = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     
     // Sets the model-view-projections matrix in the shader
     gl.uniformMatrix4fv(amvp, false, mat)
+    gl.uniformMatrix4fv(anormalMat, false, normalMat)
+    gl.uniform3fv(aambient, ambientVector)
 
 	// Main render loop
 	// gl.useProgram(program)
     // console.log(objectType)
-    
-    let indexBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-    let indices = generate_indices(vertices.length / 12)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
-    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices)
 
-    if (objectType === "torus") {
-        // console.log(vertices)
-        gl.drawArrays(method, 0, vertices.length/3)
-        gl.flush()
-    } else if (objectType === "cube") {
-        // console.log(vertices)
-        // let indexBuffer = gl.createBuffer()
-        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-        // let indices = generate_indices(vertices.length / 12)
-        // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
-        // const vertexCount = 48 * 6
-        // const type = gl.UNSIGNED_SHORT
-        // const offset = 0
-        // gl.drawElements(gl.TRIANGLES, vertexCount, type, offset)
-        // gl.flush()
-        
-        gl.drawArrays(method, 0, vertices.length)
-        gl.flush()
-    }
+    gl.drawArrays(method, 0, vertices.length/3)
+    gl.flush()
 }
 
 const hexToRgb = hex =>
