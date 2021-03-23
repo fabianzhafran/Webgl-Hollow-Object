@@ -41,27 +41,27 @@ function main3() {
 
   // Initialize a shader program; this is where all the lighting
   // for the vertices and so forth is established.
-  const shaderProgram = initShaderProgram(gl3, vsSource, fsSource);
+  const shaderProgram2 = initShaderProgram(gl3, vsSource, fsSource);
 
   // Collect all the info needed to use the shader program.
   // Look up which attributes our shader program is using
   // for aVertexPosition, aVevrtexColor and also
   // look up uniform locations.
   const programInfo = {
-	program: shaderProgram,
+	program: shaderProgram2,
 	attribLocations: {
-	  vertexPosition: gl3.getAttribLocation(shaderProgram, 'aVertexPosition'),
-	  vertexColor: gl3.getAttribLocation(shaderProgram, 'aVertexColor'),
+	  vertexPosition: gl3.getAttribLocation(shaderProgram2, 'aVertexPosition'),
+	  vertexColor: gl3.getAttribLocation(shaderProgram2, 'aVertexColor'),
 	},
 	uniformLocations: {
-	  projectionMatrix: gl3.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-	  modelViewMatrix: gl3.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+	  projectionMatrix: gl3.getUniformLocation(shaderProgram2, 'uProjectionMatrix'),
+	  modelViewMatrix: gl3.getUniformLocation(shaderProgram2, 'uModelViewMatrix'),
 	}
   };
 
   // Here's where we call the routine that builds all the
   // objects we'll be drawing.
-  const buffers = initBuffers(gl3);
+  const buffers = initBuffers2(gl3);
 
   var then = 0;
 
@@ -71,7 +71,7 @@ function main3() {
 	const deltaTime = now - then;
 	then = now;
 
-	drawScene(gl3, programInfo, buffers, deltaTime);
+	drawScene2(gl3, programInfo, buffers, deltaTime);
 
 	requestAnimationFrame(render);
   }
@@ -79,12 +79,12 @@ function main3() {
 }
 
 //
-// initBuffers
+// initBuffers2
 //
 // Initialize the buffers we'll need. For this demo, we just
 // have one object -- a simple three-dimensional prism.
 //
-function initBuffers(gl3) {
+function initBuffers2(gl3) {
 
   // Create a buffer for the prism's vertex positions.
 
@@ -223,7 +223,7 @@ function initBuffers(gl3) {
 //
 // Draw the scene.
 //
-function drawScene(gl3, programInfo, buffers, deltaTime) {
+function drawScene2(gl3, programInfo, buffers, deltaTime) {
   let temp = [191.25, 216.75, 204]
   gl3.clearColor(temp[0]/256, temp[1]/256, temp[2]/256, 1.0);  // Clear to black, fully opaque
   gl3.clearDepth(1.0);                 // Clear everything
@@ -355,54 +355,4 @@ function drawScene(gl3, programInfo, buffers, deltaTime) {
   // Update the rotation for the next draw
 
   prismRotation += deltaTime;
-}
-
-//
-// Initialize a shader program, so WebGL knows how to draw our data
-//
-function initShaderProgram(gl3, vsSource, fsSource) {
-  const vertexShader = loadShader(gl3, gl3.VERTEX_SHADER, vsSource);
-  const fragmentShader = loadShader(gl3, gl3.FRAGMENT_SHADER, fsSource);
-
-  // Create the shader program
-
-  const shaderProgram = gl3.createProgram();
-  gl3.attachShader(shaderProgram, vertexShader);
-  gl3.attachShader(shaderProgram, fragmentShader);
-  gl3.linkProgram(shaderProgram);
-
-  // If creating the shader program failed, alert
-
-  if (!gl3.getProgramParameter(shaderProgram, gl3.LINK_STATUS)) {
-	alert('Unable to initialize the shader program: ' + gl3.getProgramInfoLog(shaderProgram));
-	return null;
-  }
-
-  return shaderProgram;
-}
-
-//
-// creates a shader of the given type, uploads the source and
-// compiles it.
-//
-function loadShader(gl3, type, source) {
-  const shader = gl3.createShader(type);
-
-  // Send the source to the shader object
-
-  gl3.shaderSource(shader, source);
-
-  // Compile the shader program
-
-  gl3.compileShader(shader);
-
-  // See if it compiled successfully
-
-  if (!gl3.getShaderParameter(shader, gl3.COMPILE_STATUS)) {
-	alert('An error occurred compiling the shaders: ' + gl3.getShaderInfoLog(shader));
-	gl3.deleteShader(shader);
-	return null;
-  }
-
-  return shader;
 }
