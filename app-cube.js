@@ -638,6 +638,10 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
 	  projectionMatrix = [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]
   }
 
+  	// Tests if canvas should be refreshed
+	if (!running || !gl)
+	  	return
+
 	// Gets control value angles from HTML page via DOM
 	var ax = parseInt(document.getElementById('ax').innerHTML, 10)
 	var ay = parseInt(document.getElementById('ay').innerHTML, 10)
