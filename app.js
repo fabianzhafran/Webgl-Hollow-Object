@@ -270,17 +270,17 @@ var exportFile = function() {
 
     // console.log("arrobject", arrObjects)
 
-    var data = JSON.stringify(arrObjects);
-    download(filename + ".json", data);
+    var data = JSON.stringify(arrObjects)
+    download(filename + ".json", data)
 
-    console.log("The file was saved!"); 
+    console.log("The file was saved!")
 }
 
 var isImport = false
 
 var importFile = function() {
     var file = document.getElementById("import_file").files[0]
-    var reader = new FileReader();
+    var reader = new FileReader()
     // var data = [];
     reader.onload = function(e) {
         isImport = true
@@ -338,20 +338,20 @@ var download = function(filename, text) {
     document.body.removeChild(element)
 }
 
-var help = document.getElementById("help");
-var btn = document.getElementById("helpBtn");
-var span = document.getElementsByClassName("close")[0];
+var help = document.getElementById("help")
+var btn = document.getElementById("helpBtn")
+var span = document.getElementsByClassName("close")[0]
 
 btn.onclick = function() {
-    help.style.display = "block";
+    help.style.display = "block"
 }
 
 span.onclick = function() {
-    help.style.display = "none";
+    help.style.display = "none"
 }
 
 window.onclick = function(event) {
     if (event.target == help) {
-        help.style.display = "none";
+        help.style.display = "none"
     }
 } 
