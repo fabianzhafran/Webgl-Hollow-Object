@@ -148,16 +148,15 @@ function main3() {
   const buffers = initBuffers3(gl3);
 
   var then = 0;
-  // drawScene3(gl3, programInfo, buffers, deltaTime);
   function render(now) {
     if (running) {
       now *= 0.001;
       const deltaTime = now - then;
       then = now;
-  
+      
       drawScene3(gl3, programInfo, buffers, deltaTime);
     }
-
+      
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
@@ -238,9 +237,6 @@ function drawScene3(gl3, programInfo, buffers, deltaTime) {
   } else {
 	  projectionMatrix = [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]
   }
-
-	if (!running || !gl)
-	  	return
 
 	var ax = parseInt(document.getElementById('ax').innerHTML, 10)
 	var ay = parseInt(document.getElementById('ay').innerHTML, 10)

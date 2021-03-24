@@ -2,11 +2,7 @@
     text-align: center;
 }
 
-#canvas-surface, #canvas-surface2 {
-    background-color: rgba(191.25, 216.75, 204, 1.0);
-}
-
-#canvas-surface2 {
+#canvas-surface, #canvas-surface2, #canvas-surface3 {
     background-color: rgba(191.25, 216.75, 204, 1.0);
 }
 

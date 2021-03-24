@@ -430,6 +430,7 @@ var colorsCube = [
 var drawn = false;
 
 main2();
+main3();
 
 function main2() {
   const canvas2 = document.querySelector('#canvas-surface2');
@@ -589,9 +590,6 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
   } else {
 	  projectionMatrix = [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]
   }
-
-	if (!running || !gl)
-	  	return
 
 	var ax = parseInt(document.getElementById('ax').innerHTML, 10)
 	var ay = parseInt(document.getElementById('ay').innerHTML, 10)
