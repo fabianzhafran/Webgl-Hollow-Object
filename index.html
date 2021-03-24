@@ -13,19 +13,19 @@
         <br/>
         <section class="center">
             <button id="helpBtn">Help</button>
-            <input type="button" id="btn_torus" value="Torus" onclick="drawTorus()">
+            <input type="button" id="btn_torus" value="Start / Reset" onclick="drawTorus()">
             <!-- <input type="button" id="btn_torus" value="Cube" onclick="drawCube()"> -->
-            <input type="color" id="color_picker" onchange="getColor()">
+            <!-- <input type="color" id="color_picker" onchange="getColor()"> -->
         </section>
         <br/>
         <section class="center">
-            <canvas id="canvas-surface" width="500" height="500" onclick="running = !running">
+            <canvas id="canvas-surface" width="300" height="300" onclick="running = !running">
             Your browser does not support HTML5
             </canvas>
-            <canvas id="canvas-surface2" width="500" height="500" onclick="running = !running">
+            <canvas id="canvas-surface2" width="300" height="300" onclick="running = !running">
             Your browser does not support HTML5
             </canvas>
-            <canvas id="canvas-surface3" width="500" height="500" onclick="running = !running">
+            <canvas id="canvas-surface3" width="300" height="300" onclick="running = !running">
                 Your browser does not support HTML5
             </canvas>
         </section>
@@ -35,7 +35,7 @@
                     <div>Projection Type:</div>
                     <div>
                         <select id='projection'>
-                            <option>perspective<option>orthographic<option>oblique
+                            <option>perspective<option selected>orthographic<option>oblique
                         </select>
                     </div>
                 </div>
@@ -184,8 +184,7 @@
                 </p>
 
                 <h2>Reset Default View</h2>
-                <p> 1. Lorem ipsum <br />
-                    2. Lorem ipsum
+                <p> 1. Tekan tombol Start / Reset <br />
                 </p>
 
                 <h2>Menyimpan Gambar</h2>
@@ -212,6 +211,6 @@
         <script src="app.js"></script>
         <script src="app-cube.js"></script>
         <script src="prism.js"></script>
-        <script src="prism-utils.js"></script>
+        <!-- <script src="prism-utils.js"></script> -->
     </body>
 </html>

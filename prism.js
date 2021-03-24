@@ -1,5 +1,81 @@
-
 var prismRotation = 0.0;
+
+var verticesPrism = [
+	-1, -1, 1,
+	-1, -1, 0.75,
+	 1, -1, 0.75,
+	 1, -1, 1,
+
+	-1, 1, 1,
+	 1, 1, 1,
+	 1, 1, 0.75,
+	-1, 1, 0.75,
+
+	 1, -1, 1,
+	 1, -1, 0.75,
+	 1,  1, 0.75,
+	 1,  1, 1,
+
+	-1, -1, 1,
+	-1,  1, 1,
+	-1,  1, 0.75,
+	-1, -1, 0.75,
+
+  	-1, -1, 1,
+	 1, -1, 1,
+	 1,  1, 1,
+	-1,  1, 1,
+
+	-1, -1, 0.75,
+	-1,  1,	0.75,
+	 1,  1, 0.75,
+   1, -1, 0.75,
+  
+   1,    -1,  1,  
+   1.25, -1,  1,  
+   0.25, -1, -1,  
+   0,    -1, -1,         // bawah
+  
+1,1,1,  
+1.25,1, 1, 
+0.25,1,-1,  
+0,1,-1,            // atas
+   
+1.25,1, 1,   1.25,-1, 1,  0.25,-1,-1,  0.25,1,-1, // kanan
+  1,1, 1,   1,-1, 1,  0,-1,-1,  0,1,-1,              // kiri
+  1,1,1,  1,-1,1,  1.25,-1,1,  1.25,1,1,             // depan
+  0,1,-1,  0,-1,-1,  0.25,-1,-1,  0.25,1,-1,
+  
+  -1.25,-1,1,  -1,-1, 1,  0,-1,-1,  -0.25,-1,-1,         // bawah
+  -1.25,1,1,  -1,1, 1,  0,1,-1,  -0.25,1,-1,            // atas
+  -1,1, 1,   -1,-1, 1,  0,-1,-1,  0,1,-1,            // kanan
+  -1.25,1, 1,   -1.25,-1, 1,  -0.25,-1,-1,  -0.25,1,-1,           // kiri
+  -1,1,1,  -1,-1,1,  -1.25,-1,1,  -1.25,1,1,             // depan
+  -0.25,1,-1,  -0.25,-1,-1,  0,-1,-1,  0,1,-1
+];
+var colorsPrism =  [
+
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+[1.0,  1.0,  1.0,  1.0],    // Right face: yellow
+];
 
 main3();
 
@@ -69,79 +145,30 @@ function main3() {
       ambientLight: gl3.getUniformLocation(shaderProgram, 'uAmbientLight')
     }
   };
-  const buffers = initBuffers(gl3);
+  const buffers = initBuffers3(gl3);
 
   var then = 0;
+  // drawScene3(gl3, programInfo, buffers, deltaTime);
   function render(now) {
-    now *= 0.001;
-    const deltaTime = now - then;
-    then = now;
-
-    drawScene(gl3, programInfo, buffers, deltaTime);
+    if (running) {
+      now *= 0.001;
+      const deltaTime = now - then;
+      then = now;
+  
+      drawScene3(gl3, programInfo, buffers, deltaTime);
+    }
 
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
 }
 
-function initBuffers(gl3) {
+function initBuffers3(gl3) {
   const positionBuffer = gl3.createBuffer();
 
   gl3.bindBuffer(gl3.ARRAY_BUFFER, positionBuffer);
 
-  const positions = [
-	-1, -1, 1,
-	-1, -1, 0.75,
-	 1, -1, 0.75,
-	 1, -1, 1,
-
-	-1, 1, 1,
-	 1, 1, 1,
-	 1, 1, 0.75,
-	-1, 1, 0.75,
-
-	 1, -1, 1,
-	 1, -1, 0.75,
-	 1,  1, 0.75,
-	 1,  1, 1,
-
-	-1, -1, 1,
-	-1,  1, 1,
-	-1,  1, 0.75,
-	-1, -1, 0.75,
-
-  	-1, -1, 1,
-	 1, -1, 1,
-	 1,  1, 1,
-	-1,  1, 1,
-
-	-1, -1, 0.75,
-	-1,  1,	0.75,
-	 1,  1, 0.75,
-   1, -1, 0.75,
-  
-   1,    -1,  1,  
-   1.25, -1,  1,  
-   0.25, -1, -1,  
-   0,    -1, -1,         // bawah
-  
-1,1,1,  
-1.25,1, 1, 
-0.25,1,-1,  
-0,1,-1,            // atas
-   
-1.25,1, 1,   1.25,-1, 1,  0.25,-1,-1,  0.25,1,-1, // kanan
-  1,1, 1,   1,-1, 1,  0,-1,-1,  0,1,-1,              // kiri
-  1,1,1,  1,-1,1,  1.25,-1,1,  1.25,1,1,             // depan
-  0,1,-1,  0,-1,-1,  0.25,-1,-1,  0.25,1,-1,
-  
-  -1.25,-1,1,  -1,-1, 1,  0,-1,-1,  -0.25,-1,-1,         // bawah
-  -1.25,1,1,  -1,1, 1,  0,1,-1,  -0.25,1,-1,            // atas
-  -1,1, 1,   -1,-1, 1,  0,-1,-1,  0,1,-1,            // kanan
-  -1.25,1, 1,   -1.25,-1, 1,  -0.25,-1,-1,  -0.25,1,-1,           // kiri
-  -1,1,1,  -1,-1,1,  -1.25,-1,1,  -1.25,1,1,             // depan
-  -0.25,1,-1,  -0.25,-1,-1,  0,-1,-1,  0,1,-1
-  ];
+  const positions = verticesPrism;
 
   gl3.bufferData(gl3.ARRAY_BUFFER, new Float32Array(positions), gl3.STATIC_DRAW);
 
@@ -155,28 +182,7 @@ function initBuffers(gl3) {
   gl3.bufferData(gl3.ARRAY_BUFFER, new Float32Array(vertexNormals),
                 gl3.STATIC_DRAW);
 
-  const faceColors = [
-    [1.0,  0.0,  0.0,  1.0],    // Back-left face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-left face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-left face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-left face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-top face: red
-	[1.0,  0.0,  0.0,  1.0],    // Back-left face: red
-
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-	[0.0,  1.0,  0.0,  1.0],    // Top face: green
-
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-	[1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-  ];
+  const faceColors = colorsPrism;
 
   var colors = [];
   for (var j = 0; j < faceColors.length; ++j) {
@@ -208,7 +214,7 @@ function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
 }
 
-function drawScene(gl3, programInfo, buffers, deltaTime) {
+function drawScene3(gl3, programInfo, buffers, deltaTime) {
 	let temp = [191.25, 216.75, 204]
 	gl3.clearColor(temp[0]/256, temp[1]/256, temp[2]/256, 1.0);
   gl3.clearDepth(1.0);

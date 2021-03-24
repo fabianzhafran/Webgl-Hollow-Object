@@ -65,7 +65,6 @@ var main = function (object) {
         setTorus()
     }
 
-    // The function draw() will be called every 40 ms
     setInterval("drawObject(gl.TRIANGLE_STRIP)", 40)
 }
 
@@ -256,7 +255,17 @@ var exportFile = function() {
             transmat: Array.from(trans_matrix),
             normmat: norm_matrix,
             ambientvert: ambient_vec
-        }
+        },
+        {
+            type: "cube",
+            vert: verticesCube,
+            colors: colorsCube
+        },
+        {
+            type: "prism",
+            vert: verticesPrism,
+            colors: colorsPrism
+        },
     ]
 
     // console.log("arrobject", arrObjects)
@@ -294,8 +303,20 @@ var importFile = function() {
         // console.log("normmat", norm_matrix)
         // console.log("ambient", ambient_vec)
 
+        let objCube = arrObjects[1]
+        verticesCube = objCube.vert
+        colorsCube = objCube.colors
+
+        let objPrism = arrObjects[2]
+        verticesPrism = objPrism.vert
+        colorsPrism = objPrism.colors
+
         running = true
+        
+        // clearInterval(interval)
         main(obj.type)
+        main2();
+        main3();
     }
     
     reader.readAsText(file);
