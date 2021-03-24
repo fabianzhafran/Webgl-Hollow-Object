@@ -534,7 +534,7 @@ function initBuffers(gl2) {
     const c = faceColors[j];
     colors = colors.concat(c, c, c, c);
   }
-  console.log(colors)
+  // console.log(colors)
   const colorBuffer = gl2.createBuffer();
   gl2.bindBuffer(gl2.ARRAY_BUFFER, colorBuffer);
   gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(colors), gl2.STATIC_DRAW);
