@@ -1,11 +1,11 @@
-var drawCube = function() {
-    main("cube");
+var drawPrism = function() {
+    main("prism");
+    running = true;
 }
 
-var setCube = function() {
-    objectType = "cube" 
+var setPrism = function() {
+    objectType = "prism" 
     vertices = [
-        // Front bottom face
         -1.0, -1.0,  1.0,
         -1.0, -0.8,  1.0,
         1.0, -1.0,  1.0,
@@ -47,7 +47,7 @@ function ComputeFOVProjection(fov, aspect, nearDist, farDist, leftHanded /* = tr
     return result
 }
 
-function compute_cube_normal(vertices) {
+function compute_prism_normal(vertices) {
     let normals = []
     for (let i = 0; i < vertices.length; i += 12) {
         let point_a = [vertices[i + 0], vertices[i + 1], vertices[i + 2]]
