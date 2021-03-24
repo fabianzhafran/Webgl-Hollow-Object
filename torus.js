@@ -4,16 +4,20 @@ var drawTorus = function() {
 }
 
 var setTorus = function() {
-    // the torus factor
-    var interleave = 1.0
-    var numsegs = 40
-    var numssegs = 40
-    var sradius = 0.2
+    if (!isImport) {
+        // the torus factor
+        var interleave = 1.0
+        var numsegs = 40
+        var numssegs = 40
+        var sradius = 0.2
 
-    // Creates the object in "vertices"
-    objectType = "torus"
-    vertices = makeTorus(0.7, sradius, numsegs, numssegs, interleave)
-    torusNormals = compute_torus_normal(vertices)
+        // Creates the object in "vertices"
+        objectType = "torus"
+        var obj = makeTorus(0.7, sradius, numsegs, numssegs, interleave)
+        verticesTorus = obj.vertices
+        colorsTorus = obj.colors
+    }
+    torusNormals = compute_torus_normal(verticesTorus)
 }
 
 // Returns a transformation matrix as a flat array with 16 components, given:
@@ -106,43 +110,45 @@ var getTransformationMatrix = function(ox, oy, oz, rx, ry, rz, s, d, f, n, ar, e
 
 }
 
-// Creates a 3D torus in the XY plane, returns the vertices in a Float32Array
+// Creates a 3D torus in the XY plane, returns the data in a new object composed of
+//   several Float32Array objects named 'vertices' and 'colors', according to
+//   the following parameters:
 // r:  big radius
 // sr: section radius
 // n:  number of faces
 // sn: number of faces on section
 // k:  factor between 0 and 1 defining the space between strips of the torus
-var makeTorus = function(r, sr, n, sn, k) {
-    // Temporary arrays for the vertices and the normals
-    var tv = new Array()
+function makeTorus(r, sr, n, sn, k) {
+    // Temporary arrays for the vertices, normals and colors
+    var tv = new Array();
+    var tc = new Array();
     
     // Iterates along the big circle and then around a section
-    for(var i=0; i<n; i++) {
-        for(var j=0; j<sn+1*(i==n-1); j++) {
-            // Pre-calculation of angles
-            var a =  2*Math.PI*(i+j/sn)/n
-            var a2 = 2*Math.PI*(i+j/sn+k)/n
-            var sa = 2*Math.PI*j/sn
-            
-            // Coordinates on the surface of the torus  
-            // if (j > 1) continue;
-            tv.push((r+sr*Math.cos(sa))*Math.cos(a)) // X
-            tv.push((r+sr*Math.cos(sa))*Math.sin(a)) // Y
-            tv.push(sr*Math.sin(sa))                 // Z
-            
-            // Second vertex to close triangle
-            tv.push((r+sr*Math.cos(sa))*Math.cos(a2)) // X
-            tv.push((r+sr*Math.cos(sa))*Math.sin(a2)) // Y
-            tv.push(sr*Math.sin(sa))                  // Z
-            // break
-        }
-        // if (i === 0) {
-        //     break
-        // }
-    }
+    for(var i=0;i<n;i++)               // Iterates over all strip rounds
+        for(var j=0;j<sn+1*(i==n-1);j++) // Iterates along the torus section
+            for(var v=0;v<2;v++) {          // Creates zigzag pattern (v equals 0 or 1)
+                // Pre-calculation of angles
+                var a =  2*Math.PI*(i+j/sn+k*v)/n
+                var sa = 2*Math.PI*j/sn
+                var x, y, z
+        
+                // Coordinates on the surface of the torus
+                tv.push(x = (r+sr*Math.cos(sa))*Math.cos(a)) // X
+                tv.push(y = (r+sr*Math.cos(sa))*Math.sin(a)) // Y
+                tv.push(z = sr*Math.sin(sa))                 // Z
+        
+                // Colors
+                tc.push(1.0)  // R
+                tc.push(1.0)  // G
+                tc.push(1.0)  // B
+                tc.push(1.0)  // Alpha
+            }
+    
     // Converts and returns array
-    // console.log(tv)
-    return new Float32Array(tv)
+    var res = new Object()
+    res.vertices = new Float32Array(tv)
+    res.colors = new Float32Array(tc)
+    return res
 }
 
 let torus_compute = 0

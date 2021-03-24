@@ -430,7 +430,7 @@ var colorsCube = [
 var drawn = false;
 
 main2();
-main3();
+// main3();
 
 function main2() {
   const canvas2 = document.querySelector('#canvas-surface2');
