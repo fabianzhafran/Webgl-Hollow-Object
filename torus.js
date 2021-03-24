@@ -141,7 +141,7 @@ var makeTorus = function(r, sr, n, sn, k) {
         // }
     }
     // Converts and returns array
-    console.log(tv)
+    // console.log(tv)
     return new Float32Array(tv)
 }
 
@@ -162,7 +162,7 @@ function compute_torus_normal(vertices) {
         for (let j = 0; j < 12; j += 3) {
             normals.push(cross_result[0]); normals.push(cross_result[1]); normals.push(cross_result[2]);
         }
-        console.log(normals.length)
+        // console.log(normals.length)
     }
     return new Float32Array(normals)
 }

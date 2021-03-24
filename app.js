@@ -124,8 +124,8 @@ var drawObject = function (method) {
 
     // var torusNormals = compute_torus_normal(vertices)
     var normalBuffer = gl.createBuffer()
-    console.log(torusNormals)
-    console.log(vertices)
+    // console.log(torusNormals)
+    // console.log(vertices)
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, torusNormals, gl.STATIC_DRAW)
     gl.vertexAttribPointer(

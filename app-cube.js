@@ -73,11 +73,13 @@ function main2() {
 
   var then = 0;
   function render(now) {
-    now *= 0.001;
-    const deltaTime = now - then;
-    then = now;
-
-    drawScene(gl2, programInfo, buffers, deltaTime);
+    if (running) {
+      now *= 0.001;
+      const deltaTime = now - then;
+      then = now;
+      
+      drawScene(gl2, programInfo, buffers, deltaTime);
+    }
 
     requestAnimationFrame(render);
   }
@@ -689,7 +691,6 @@ function drawScene(gl2, programInfo, buffers, deltaTime) {
   let ambientOption = document.getElementById('ambient').value;
   let ambientVector = null;
   if (ambientOption === 'ON') {
-    // ambientVector = [0.2, 0.2, 0.2];
     ambientVector = [0.3, 0.3, 0.3];
   } else {
     ambientVector = [1.0, 1.0, 1.0];
